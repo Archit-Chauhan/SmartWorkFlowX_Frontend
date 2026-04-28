@@ -6,7 +6,7 @@ import type {
 } from '../../models';
 import {
   GitPullRequest, Plus, Trash2, Save, Eye, Edit2,
-  Copy, Power, PowerOff, ChevronDown, ChevronUp, CheckCircle
+  Copy, Power, PowerOff, ChevronUp
 } from 'lucide-react';
 
 interface Role { roleId: number; roleName: string; }

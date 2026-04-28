@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../../api/axiosInstance';
 import type { User, UserRole } from '../../models';
-import { UserPlus, User as UserIcon, CheckCircle, Trash2, AlertCircle } from 'lucide-react';
+import { UserPlus, User as UserIcon, CheckCircle, Trash2 } from 'lucide-react';
 
 const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
