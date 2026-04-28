@@ -2,8 +2,8 @@ import axios from 'axios';
 
 // Create the base instance
 const axiosInstance = axios.create({
-  // Ensure this matches your .NET project's https port (e.g., 7001 or 5001)
-  baseURL: 'https://localhost:52082/api', 
+  // Use Vite environment variables, fallback to localhost for local dev
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://localhost:52082/api', 
   headers: {
     'Content-Type': 'application/json',
   },

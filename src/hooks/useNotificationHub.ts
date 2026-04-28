@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import * as signalR from '@microsoft/signalr';
 import type { Notification } from '../models';
 
-const HUB_URL = 'https://localhost:52082/hubs/notifications';
+const HUB_URL = import.meta.env.VITE_HUB_URL || 'https://localhost:52082/hubs/notifications';
 
 export const useNotificationHub = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
