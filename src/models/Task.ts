@@ -35,7 +35,7 @@ export interface TaskRejectRequest {
 export interface TaskStepHistory {
   stepOrder: number;
   actedByName: string;
-  action: 'Approved' | 'Rejected';
+  action: 'Approved' | 'Rejected' | 'Completed';
   comment?: string;
   actedAt: string;
 }

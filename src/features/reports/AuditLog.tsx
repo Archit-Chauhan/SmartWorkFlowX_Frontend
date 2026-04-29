@@ -3,11 +3,10 @@ import axiosInstance from '../../api/axiosInstance';
 import { History, ShieldCheck, User, Calendar, Activity } from 'lucide-react';
 
 interface AuditEntry {
-  logId: number;
+  userName: string;
   action: string;
   entityName: string;
   timestamp: string;
-  userName: string;
 }
 
 const AuditLog: React.FC = () => {
@@ -16,8 +15,8 @@ const AuditLog: React.FC = () => {
 
   const fetchLogs = async () => {
     try {
-      const response = await axiosInstance.get<AuditEntry[]>('/Admin/audit-logs');
-      setLogs(response.data);
+      const response = await axiosInstance.get<{ total: number; page: number; pageSize: number; data: AuditEntry[] }>('/Report/audit-logs');
+      setLogs(response.data.data);
     } catch (err) {
       console.error("Failed to fetch audit logs");
     } finally {
@@ -65,8 +64,8 @@ const AuditLog: React.FC = () => {
             ) : logs.length === 0 ? (
               <tr><td colSpan={4} className="p-10 text-center text-gray-400 italic">No activity logs recorded yet.</td></tr>
             ) : (
-              logs.map((log) => (
-                <tr key={log.logId} className="hover:bg-gray-50 transition-colors">
+              logs.map((log, index) => (
+                <tr key={index} className="hover:bg-gray-50 transition-colors">
                   <td className="px-6 py-4 text-sm text-gray-600 font-mono flex items-center gap-2">
                     <Calendar size={14} className="text-gray-400" />
                     {new Date(log.timestamp).toLocaleString()}

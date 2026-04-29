@@ -152,7 +152,7 @@ const TaskList: React.FC = () => {
                         className="flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50 transition-colors"
                       >
                         <CheckCircle size={15} />
-                        Approve
+                        {task.currentStepOrder === 0 ? 'Complete' : 'Approve'}
                       </button>
                       <button
                         onClick={() => setRejectModalTask(task)}
@@ -187,12 +187,12 @@ const TaskList: React.FC = () => {
                       {(history[task.taskId] ?? []).map((h, i) => (
                         <div key={i} className="flex items-center gap-3 text-sm">
                           <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            h.action === 'Approved' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                            h.action === 'Approved' || h.action === 'Completed' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
                           }`}>
-                            {h.action === 'Approved' ? <CheckCircle size={12} /> : <XCircle size={12} />}
+                            {h.action === 'Approved' || h.action === 'Completed' ? <CheckCircle size={12} /> : <XCircle size={12} />}
                           </div>
                           <span className="font-medium text-gray-700">Step {h.stepOrder}</span>
-                          <span className={`font-semibold ${h.action === 'Approved' ? 'text-green-600' : 'text-red-500'}`}>
+                          <span className={`font-semibold ${h.action === 'Approved' || h.action === 'Completed' ? 'text-green-600' : 'text-red-500'}`}>
                             {h.action}
                           </span>
                           <span className="text-gray-500">by {h.actedByName}</span>
