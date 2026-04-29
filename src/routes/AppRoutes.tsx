@@ -11,6 +11,7 @@ import TaskAssign from '../features/tasks/TaskAssign';
 import WorkflowBuilder from '../features/workflows/WorkflowBuilder';
 import UserManagement from '../features/auth/UserManagement';
 import AuditLog from '../features/reports/AuditLog';
+import BroadcastNotification from '../features/notifications/BroadcastNotification';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -51,6 +52,11 @@ const AppRoutes: React.FC = () => {
         <Route path="audit" element={
           <RoleRoute roles={['Admin', 'Auditor']}>
             <AuditLog />
+          </RoleRoute>
+        } />
+        <Route path="broadcast" element={
+          <RoleRoute roles={['Admin']}>
+            <BroadcastNotification />
           </RoleRoute>
         } />
       </Route>

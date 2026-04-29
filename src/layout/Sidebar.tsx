@@ -7,7 +7,8 @@ import {
   GitBranch,
   Users,
   History,
-  Send
+  Send,
+  Radio
 } from 'lucide-react';
 
 const Sidebar: React.FC = () => {
@@ -50,6 +51,12 @@ const Sidebar: React.FC = () => {
       label: 'Audit Logs',
       icon: <History size={20} />,
       roles: ['Admin', 'Auditor'],
+    },
+    {
+      to: '/broadcast',
+      label: 'Broadcast',
+      icon: <Radio size={20} />,
+      roles: ['Admin'],
     },
   ];
 
