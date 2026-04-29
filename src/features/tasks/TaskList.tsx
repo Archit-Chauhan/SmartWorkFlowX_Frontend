@@ -3,7 +3,7 @@ import axiosInstance from '../../api/axiosInstance';
 import type { TaskItem, TaskStepHistory, TaskRejectRequest } from '../../models';
 import {
   CheckCircle, Clock, XCircle, AlertTriangle,
-  ChevronDown, ChevronUp, RotateCcw, Flag
+  ChevronDown, ChevronUp, RotateCcw, Flag, Activity
 } from 'lucide-react';
 
 const PRIORITY_STYLES: Record<string, string> = {
@@ -20,9 +20,14 @@ const STATUS_STYLES: Record<string, string> = {
   Pending:     'bg-yellow-100 text-yellow-700',
 };
 
+type Tab = 'action' | 'activity';
+
 const TaskList: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<Tab>('action');
   const [tasks, setTasks] = useState<TaskItem[]>([]);
+  const [activityTasks, setActivityTasks] = useState<TaskItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activityLoading, setActivityLoading] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [history, setHistory] = useState<Record<number, TaskStepHistory[]>>({});
   const [rejectModalTask, setRejectModalTask] = useState<TaskItem | null>(null);
@@ -40,7 +45,23 @@ const TaskList: React.FC = () => {
     }
   };
 
+  const fetchActivity = async () => {
+    setActivityLoading(true);
+    try {
+      const res = await axiosInstance.get<TaskItem[]>('/Task/my-activity');
+      setActivityTasks(res.data);
+    } finally {
+      setActivityLoading(false);
+    }
+  };
+
   useEffect(() => { fetchTasks(); }, []);
+
+  useEffect(() => {
+    if (activeTab === 'activity' && activityTasks.length === 0) {
+      fetchActivity();
+    }
+  }, [activeTab]);
 
   const loadHistory = async (taskId: number) => {
     if (history[taskId]) return;
@@ -63,6 +84,8 @@ const TaskList: React.FC = () => {
       await axiosInstance.post(`/Task/${task.taskId}/approve`, null);
       await fetchTasks();
       setHistory(prev => { const n = { ...prev }; delete n[task.taskId]; return n; });
+      // Refresh activity to show the newly-acted-on task
+      if (activityTasks.length > 0) fetchActivity();
     } finally {
       setActionLoading(null);
     }
@@ -79,6 +102,7 @@ const TaskList: React.FC = () => {
       setRejectComment('');
       await fetchTasks();
       setHistory(prev => { const n = { ...prev }; delete n[rejectModalTask.taskId]; return n; });
+      if (activityTasks.length > 0) fetchActivity();
     } finally {
       setActionLoading(null);
     }
@@ -86,126 +110,180 @@ const TaskList: React.FC = () => {
 
   const isActive = (t: TaskItem) => t.status !== 'Completed' && t.status !== 'Cancelled';
 
-  if (loading) return (
-    <div className="flex justify-center items-center h-48 text-gray-400">
-      <Clock size={20} className="animate-spin mr-2" /> Loading tasks...
-    </div>
-  );
+  const renderTaskCard = (task: TaskItem, showActions: boolean) => (
+    <div key={task.taskId} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      {/* Main Row */}
+      <div className="p-5 flex flex-wrap gap-4 items-center justify-between">
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          {/* Priority flag */}
+          <div className={`p-2 rounded-lg border ${PRIORITY_STYLES[task.priority] || PRIORITY_STYLES.Medium}`}>
+            <Flag size={16} />
+          </div>
+          <div className="min-w-0">
+            <h4 className="font-semibold text-gray-800 truncate">{task.title}</h4>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Step {task.currentStepOrder} ·{' '}
+              {task.workflowTitle || 'Workflow'} ·{' '}
+              {task.dueDate ? `Due ${new Date(task.dueDate).toLocaleDateString()}` : 'No due date'}
+            </p>
+            {task.rejectedReason && (
+              <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+                <RotateCcw size={10} /> Sent back: {task.rejectedReason}
+              </p>
+            )}
+          </div>
+        </div>
 
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">Action Center</h2>
-          <p className="text-sm text-gray-500">{tasks.length} task{tasks.length !== 1 ? 's' : ''} assigned to you</p>
+        <div className="flex items-center gap-3 flex-shrink-0">
+          {/* Priority badge */}
+          <span className={`text-xs font-bold px-2 py-1 rounded-full border ${PRIORITY_STYLES[task.priority]}`}>
+            {task.priority}
+          </span>
+
+          {/* Status badge */}
+          <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase ${STATUS_STYLES[task.status] || STATUS_STYLES.Pending}`}>
+            {task.status}
+          </span>
+
+          {/* Actions — only in Action Center tab */}
+          {showActions && isActive(task) && (
+            <>
+              <button
+                onClick={() => handleApprove(task)}
+                disabled={actionLoading === task.taskId}
+                className="flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50 transition-colors"
+              >
+                <CheckCircle size={15} />
+                {task.currentStepOrder === 0 ? 'Complete' : 'Approve'}
+              </button>
+              <button
+                onClick={() => setRejectModalTask(task)}
+                disabled={actionLoading === task.taskId}
+                className="flex items-center gap-1.5 bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg hover:bg-red-100 text-sm font-medium disabled:opacity-50 transition-colors"
+              >
+                <XCircle size={15} />
+                Reject
+              </button>
+            </>
+          )}
+
+          {/* Expand toggle */}
+          <button
+            onClick={() => toggleExpand(task.taskId)}
+            className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+            title="View approval history"
+          >
+            {expandedId === task.taskId ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          </button>
         </div>
       </div>
 
-      {tasks.length === 0 ? (
+      {/* History Panel */}
+      {expandedId === task.taskId && (
+        <div className="border-t border-gray-100 bg-gray-50 px-5 py-4">
+          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Approval History</p>
+          {(history[task.taskId] ?? []).length === 0 ? (
+            <p className="text-xs text-gray-400 italic">No actions taken yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {(history[task.taskId] ?? []).map((h, i) => (
+                <div key={i} className="flex items-center gap-3 text-sm">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    h.action === 'Approved' || h.action === 'Completed' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                  }`}>
+                    {h.action === 'Approved' || h.action === 'Completed' ? <CheckCircle size={12} /> : <XCircle size={12} />}
+                  </div>
+                  <span className="font-medium text-gray-700">Step {h.stepOrder}</span>
+                  <span className={`font-semibold ${h.action === 'Approved' || h.action === 'Completed' ? 'text-green-600' : 'text-red-500'}`}>
+                    {h.action}
+                  </span>
+                  <span className="text-gray-500">by {h.actedByName}</span>
+                  {h.comment && <span className="text-gray-400 italic">· "{h.comment}"</span>}
+                  <span className="ml-auto text-gray-400 text-xs">{new Date(h.actedAt).toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+
+  const currentList = activeTab === 'action' ? tasks : activityTasks;
+  const isCurrentLoading = activeTab === 'action' ? loading : activityLoading;
+
+  return (
+    <div className="space-y-6">
+      {/* Header with tabs */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">
+            {activeTab === 'action' ? 'Action Center' : 'My Activity'}
+          </h2>
+          <p className="text-sm text-gray-500">
+            {activeTab === 'action'
+              ? `${tasks.length} task${tasks.length !== 1 ? 's' : ''} assigned to you`
+              : `${activityTasks.length} task${activityTasks.length !== 1 ? 's' : ''} you've acted on`}
+          </p>
+        </div>
+
+        {/* Tab Toggle */}
+        <div className="flex bg-gray-100 rounded-lg p-1 self-start">
+          <button
+            onClick={() => setActiveTab('action')}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+              activeTab === 'action'
+                ? 'bg-white text-blue-700 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <CheckCircle size={15} />
+            Action Center
+            {tasks.length > 0 && (
+              <span className={`ml-1 px-1.5 py-0.5 rounded-full text-xs font-bold ${
+                activeTab === 'action' ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-600'
+              }`}>
+                {tasks.length}
+              </span>
+            )}
+          </button>
+          <button
+            onClick={() => setActiveTab('activity')}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+              activeTab === 'activity'
+                ? 'bg-white text-blue-700 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            <Activity size={15} />
+            My Activity
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      {isCurrentLoading ? (
+        <div className="flex justify-center items-center h-48 text-gray-400">
+          <Clock size={20} className="animate-spin mr-2" /> Loading tasks...
+        </div>
+      ) : currentList.length === 0 ? (
         <div className="text-center py-16 text-gray-400">
-          <CheckCircle size={40} className="mx-auto mb-3 text-green-400" />
-          <p className="font-medium">All clear! No tasks assigned to you.</p>
+          {activeTab === 'action' ? (
+            <>
+              <CheckCircle size={40} className="mx-auto mb-3 text-green-400" />
+              <p className="font-medium">All clear! No tasks assigned to you.</p>
+            </>
+          ) : (
+            <>
+              <Activity size={40} className="mx-auto mb-3 text-gray-300" />
+              <p className="font-medium">No activity yet.</p>
+              <p className="text-sm mt-1">Tasks you complete or approve will appear here.</p>
+            </>
+          )}
         </div>
       ) : (
         <div className="space-y-3">
-          {tasks.map(task => (
-            <div key={task.taskId} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-              {/* Main Row */}
-              <div className="p-5 flex flex-wrap gap-4 items-center justify-between">
-                <div className="flex items-center gap-4 flex-1 min-w-0">
-                  {/* Priority flag */}
-                  <div className={`p-2 rounded-lg border ${PRIORITY_STYLES[task.priority] || PRIORITY_STYLES.Medium}`}>
-                    <Flag size={16} />
-                  </div>
-                  <div className="min-w-0">
-                    <h4 className="font-semibold text-gray-800 truncate">{task.title}</h4>
-                    <p className="text-xs text-gray-400 mt-0.5">
-                      Step {task.currentStepOrder} ·{' '}
-                      {task.workflowTitle || 'Workflow'} ·{' '}
-                      {task.dueDate ? `Due ${new Date(task.dueDate).toLocaleDateString()}` : 'No due date'}
-                    </p>
-                    {task.rejectedReason && (
-                      <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
-                        <RotateCcw size={10} /> Sent back: {task.rejectedReason}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  {/* Priority badge */}
-                  <span className={`text-xs font-bold px-2 py-1 rounded-full border ${PRIORITY_STYLES[task.priority]}`}>
-                    {task.priority}
-                  </span>
-
-                  {/* Status badge */}
-                  <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase ${STATUS_STYLES[task.status] || STATUS_STYLES.Pending}`}>
-                    {task.status}
-                  </span>
-
-                  {/* Actions */}
-                  {isActive(task) && (
-                    <>
-                      <button
-                        onClick={() => handleApprove(task)}
-                        disabled={actionLoading === task.taskId}
-                        className="flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50 transition-colors"
-                      >
-                        <CheckCircle size={15} />
-                        {task.currentStepOrder === 0 ? 'Complete' : 'Approve'}
-                      </button>
-                      <button
-                        onClick={() => setRejectModalTask(task)}
-                        disabled={actionLoading === task.taskId}
-                        className="flex items-center gap-1.5 bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg hover:bg-red-100 text-sm font-medium disabled:opacity-50 transition-colors"
-                      >
-                        <XCircle size={15} />
-                        Reject
-                      </button>
-                    </>
-                  )}
-
-                  {/* Expand toggle */}
-                  <button
-                    onClick={() => toggleExpand(task.taskId)}
-                    className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
-                    title="View approval history"
-                  >
-                    {expandedId === task.taskId ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                  </button>
-                </div>
-              </div>
-
-              {/* History Panel */}
-              {expandedId === task.taskId && (
-                <div className="border-t border-gray-100 bg-gray-50 px-5 py-4">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Approval History</p>
-                  {(history[task.taskId] ?? []).length === 0 ? (
-                    <p className="text-xs text-gray-400 italic">No actions taken yet.</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {(history[task.taskId] ?? []).map((h, i) => (
-                        <div key={i} className="flex items-center gap-3 text-sm">
-                          <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                            h.action === 'Approved' || h.action === 'Completed' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
-                          }`}>
-                            {h.action === 'Approved' || h.action === 'Completed' ? <CheckCircle size={12} /> : <XCircle size={12} />}
-                          </div>
-                          <span className="font-medium text-gray-700">Step {h.stepOrder}</span>
-                          <span className={`font-semibold ${h.action === 'Approved' || h.action === 'Completed' ? 'text-green-600' : 'text-red-500'}`}>
-                            {h.action}
-                          </span>
-                          <span className="text-gray-500">by {h.actedByName}</span>
-                          {h.comment && <span className="text-gray-400 italic">· "{h.comment}"</span>}
-                          <span className="ml-auto text-gray-400 text-xs">{new Date(h.actedAt).toLocaleString()}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
+          {currentList.map(task => renderTaskCard(task, activeTab === 'action'))}
         </div>
       )}
 
