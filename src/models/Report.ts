@@ -23,10 +23,3 @@ export interface AuditLogEntry {
   entityName: string;
   timestamp: string;
 }
-
-export interface PaginatedResponse<T> {
-  total: number;
-  page: number;
-  pageSize: number;
-  data: T[];
-}

@@ -1,13 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../../api/axiosInstance';
-import type { User, UserRole } from '../../models';
+import type { User, UserRole, PaginatedResponse } from '../../models';
 import { UserPlus, User as UserIcon, CheckCircle, Trash2 } from 'lucide-react';
+import Pagination from '../../components/Pagination';
 
 const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   
+  // Pagination State
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 10;
+
   // Form State
   const [formData, setFormData] = useState({
     name: '',
@@ -17,9 +23,11 @@ const UserManagement: React.FC = () => {
   });
 
   const fetchUsers = async () => {
+    setLoading(true);
     try {
-      const response = await axiosInstance.get<User[]>('/Admin/users');
-      setUsers(response.data);
+      const response = await axiosInstance.get<PaginatedResponse<User>>(`/Admin/users?page=${page}&limit=${limit}`);
+      setUsers(response.data.data);
+      setTotal(response.data.total);
     } catch (err) {
       console.error("Failed to fetch users");
     } finally {
@@ -27,7 +35,7 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  useEffect(() => { fetchUsers(); }, []);
+  useEffect(() => { fetchUsers(); }, [page]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,7 +54,7 @@ const UserManagement: React.FC = () => {
     if (window.confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
       try {
         await axiosInstance.delete(`/Admin/users/${userId}`);
-        setUsers(users.filter(u => u.userId !== userId)); // Optimistic update
+        fetchUsers(); // Fetch fresh paginated data
         alert("User deleted successfully.");
       } catch (err: any) {
         const message = err.response?.data?.message || "Error deleting user.";
@@ -61,6 +69,8 @@ const UserManagement: React.FC = () => {
     { id: 3, name: 'Employee' },
     { id: 4, name: 'Auditor' },
   ];
+
+  const totalPages = Math.ceil(total / limit);
 
   return (
     <div className="space-y-6">
@@ -128,55 +138,67 @@ const UserManagement: React.FC = () => {
       )}
 
       {/* Users Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-gray-50 border-b border-gray-100">
-            <tr>
-              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">User</th>
-              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Email</th>
-              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Role</th>
-              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-center">Status</th>
-              <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {loading ? (
-              <tr><td colSpan={5} className="p-10 text-center text-gray-400">Loading users...</td></tr>
-            ) : (
-              users.map(u => (
-                <tr key={u.userId} className="hover:bg-gray-50 transition-colors group">
-                  <td className="px-6 py-4 flex items-center gap-3">
-                    <div className="bg-blue-100 p-2 rounded-full text-blue-600 group-hover:bg-blue-200 transition-colors">
-                      <UserIcon size={16} />
-                    </div>
-                    <span className="font-medium text-gray-900">{u.name}</span>
-                  </td>
-                  <td className="px-6 py-4 text-gray-600 text-sm">{u.email}</td>
-                  <td className="px-6 py-4">
-                    <span className="px-3 py-1 bg-gray-100 text-gray-700 text-[10px] font-bold rounded-full uppercase border border-gray-200">
-                      {roles.find(r => r.id === u.roleId)?.name || 'User'}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-center">
-                    <CheckCircle size={18} className="text-green-500 inline" />
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <button 
-                      onClick={() => handleDelete(u.userId, u.name)}
-                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                      title="Delete User"
-                    >
-                      <Trash2 size={18} />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-            {!loading && users.length === 0 && (
-              <tr><td colSpan={5} className="p-10 text-center text-gray-400">No users found.</td></tr>
-            )}
-          </tbody>
-        </table>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead className="bg-gray-50 border-b border-gray-100">
+              <tr>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">User</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Email</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Role</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-center">Status</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {loading ? (
+                <tr><td colSpan={5} className="p-10 text-center text-gray-400">Loading users...</td></tr>
+              ) : (
+                users.map(u => (
+                  <tr key={u.userId} className="hover:bg-gray-50 transition-colors group">
+                    <td className="px-6 py-4 flex items-center gap-3">
+                      <div className="bg-blue-100 p-2 rounded-full text-blue-600 group-hover:bg-blue-200 transition-colors">
+                        <UserIcon size={16} />
+                      </div>
+                      <span className="font-medium text-gray-900">{u.name}</span>
+                    </td>
+                    <td className="px-6 py-4 text-gray-600 text-sm">{u.email}</td>
+                    <td className="px-6 py-4">
+                      <span className="px-3 py-1 bg-gray-100 text-gray-700 text-[10px] font-bold rounded-full uppercase border border-gray-200">
+                        {roles.find(r => r.id === u.roleId)?.name || 'User'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <CheckCircle size={18} className="text-green-500 inline" />
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <button 
+                        onClick={() => handleDelete(u.userId, u.name)}
+                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                        title="Delete User"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+              {!loading && users.length === 0 && (
+                <tr><td colSpan={5} className="p-10 text-center text-gray-400">No users found.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        
+        {!loading && totalPages > 1 && (
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            totalItems={total}
+            pageSize={limit}
+            onPageChange={setPage}
+          />
+        )}
       </div>
     </div>
   );

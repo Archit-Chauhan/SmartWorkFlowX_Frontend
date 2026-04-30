@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../../api/axiosInstance';
-import type { TaskItem, TaskStepHistory, TaskRejectRequest } from '../../models';
+import type { TaskItem, TaskStepHistory, TaskRejectRequest, PaginatedResponse } from '../../models';
 import {
   CheckCircle, Clock, XCircle, AlertTriangle,
   ChevronDown, ChevronUp, RotateCcw, Flag, Activity
 } from 'lucide-react';
+import Pagination from '../../components/Pagination';
 
 const PRIORITY_STYLES: Record<string, string> = {
   High:   'bg-red-100 text-red-700 border-red-200',
@@ -24,8 +25,15 @@ type Tab = 'action' | 'activity';
 
 const TaskList: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('action');
+  
   const [tasks, setTasks] = useState<TaskItem[]>([]);
+  const [actionPage, setActionPage] = useState(1);
+  const [actionTotal, setActionTotal] = useState(0);
+
   const [activityTasks, setActivityTasks] = useState<TaskItem[]>([]);
+  const [activityPage, setActivityPage] = useState(1);
+  const [activityTotal, setActivityTotal] = useState(0);
+
   const [loading, setLoading] = useState(true);
   const [activityLoading, setActivityLoading] = useState(false);
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -35,11 +43,14 @@ const TaskList: React.FC = () => {
   const [rejectComment, setRejectComment] = useState('');
   const [actionLoading, setActionLoading] = useState<number | null>(null);
 
+  const limit = 10;
+
   const fetchTasks = async () => {
     setLoading(true);
     try {
-      const res = await axiosInstance.get<TaskItem[]>('/Task/my-tasks');
-      setTasks(res.data);
+      const res = await axiosInstance.get<PaginatedResponse<TaskItem>>(`/Task/my-tasks?page=${actionPage}&limit=${limit}`);
+      setTasks(res.data.data);
+      setActionTotal(res.data.total);
     } finally {
       setLoading(false);
     }
@@ -48,20 +59,21 @@ const TaskList: React.FC = () => {
   const fetchActivity = async () => {
     setActivityLoading(true);
     try {
-      const res = await axiosInstance.get<TaskItem[]>('/Task/my-activity');
-      setActivityTasks(res.data);
+      const res = await axiosInstance.get<PaginatedResponse<TaskItem>>(`/Task/my-activity?page=${activityPage}&limit=${limit}`);
+      setActivityTasks(res.data.data);
+      setActivityTotal(res.data.total);
     } finally {
       setActivityLoading(false);
     }
   };
 
-  useEffect(() => { fetchTasks(); }, []);
+  useEffect(() => { fetchTasks(); }, [actionPage]);
 
   useEffect(() => {
-    if (activeTab === 'activity' && activityTasks.length === 0) {
+    if (activeTab === 'activity') {
       fetchActivity();
     }
-  }, [activeTab]);
+  }, [activeTab, activityPage]);
 
   const loadHistory = async (taskId: number) => {
     if (history[taskId]) return;
@@ -84,8 +96,7 @@ const TaskList: React.FC = () => {
       await axiosInstance.post(`/Task/${task.taskId}/approve`, null);
       await fetchTasks();
       setHistory(prev => { const n = { ...prev }; delete n[task.taskId]; return n; });
-      // Refresh activity to show the newly-acted-on task
-      if (activityTasks.length > 0) fetchActivity();
+      if (activeTab === 'activity') fetchActivity();
     } finally {
       setActionLoading(null);
     }
@@ -102,7 +113,7 @@ const TaskList: React.FC = () => {
       setRejectComment('');
       await fetchTasks();
       setHistory(prev => { const n = { ...prev }; delete n[rejectModalTask.taskId]; return n; });
-      if (activityTasks.length > 0) fetchActivity();
+      if (activeTab === 'activity') fetchActivity();
     } finally {
       setActionLoading(null);
     }
@@ -211,6 +222,10 @@ const TaskList: React.FC = () => {
 
   const currentList = activeTab === 'action' ? tasks : activityTasks;
   const isCurrentLoading = activeTab === 'action' ? loading : activityLoading;
+  
+  const currentPage = activeTab === 'action' ? actionPage : activityPage;
+  const currentTotal = activeTab === 'action' ? actionTotal : activityTotal;
+  const totalPages = Math.ceil(currentTotal / limit);
 
   return (
     <div className="space-y-6">
@@ -222,8 +237,8 @@ const TaskList: React.FC = () => {
           </h2>
           <p className="text-sm text-gray-500">
             {activeTab === 'action'
-              ? `${tasks.length} task${tasks.length !== 1 ? 's' : ''} assigned to you`
-              : `${activityTasks.length} task${activityTasks.length !== 1 ? 's' : ''} you've acted on`}
+              ? `${actionTotal} task${actionTotal !== 1 ? 's' : ''} assigned to you`
+              : `${activityTotal} task${activityTotal !== 1 ? 's' : ''} you've acted on`}
           </p>
         </div>
 
@@ -239,11 +254,11 @@ const TaskList: React.FC = () => {
           >
             <CheckCircle size={15} />
             Action Center
-            {tasks.length > 0 && (
+            {actionTotal > 0 && (
               <span className={`ml-1 px-1.5 py-0.5 rounded-full text-xs font-bold ${
                 activeTab === 'action' ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-600'
               }`}>
-                {tasks.length}
+                {actionTotal}
               </span>
             )}
           </button>
@@ -284,6 +299,19 @@ const TaskList: React.FC = () => {
       ) : (
         <div className="space-y-3">
           {currentList.map(task => renderTaskCard(task, activeTab === 'action'))}
+          
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={currentTotal}
+              pageSize={limit}
+              onPageChange={(page) => {
+                if (activeTab === 'action') setActionPage(page);
+                else setActivityPage(page);
+              }}
+            />
+          )}
         </div>
       )}
 

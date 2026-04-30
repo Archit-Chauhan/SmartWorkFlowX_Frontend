@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../../api/axiosInstance';
-import type { Workflow, TaskCreateRequest, TaskPriority } from '../../models';
+import type { Workflow, TaskCreateRequest, TaskPriority, PaginatedResponse } from '../../models';
 import { Send, ClipboardList } from 'lucide-react';
 
 interface User { userId: number; name: string; email: string; roleName: string; }
@@ -22,11 +22,11 @@ const TaskAssign: React.FC = () => {
   useEffect(() => {
     const load = async () => {
       const [wf, u] = await Promise.all([
-        axiosInstance.get<Workflow[]>('/Workflow'),
-        axiosInstance.get<User[]>('/Admin/users'),
+        axiosInstance.get<PaginatedResponse<Workflow>>('/Workflow?page=1&limit=1000'),
+        axiosInstance.get<PaginatedResponse<User>>('/Admin/users?page=1&limit=1000'),
       ]);
-      setWorkflows(wf.data.filter(w => w.status === 'Active'));
-      setUsers(u.data);
+      setWorkflows(wf.data.data.filter(w => w.status === 'Active'));
+      setUsers(u.data.data);
       setLoading(false);
     };
     load();

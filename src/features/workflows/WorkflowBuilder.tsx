@@ -2,12 +2,13 @@ import React, { useEffect, useState } from 'react';
 import axiosInstance from '../../api/axiosInstance';
 import type {
   Workflow, WorkflowDetail, WorkflowStepCreateDto,
-  WorkflowCreateRequest, OnRejectAction
+  WorkflowCreateRequest, OnRejectAction, PaginatedResponse
 } from '../../models';
 import {
   GitPullRequest, Plus, Trash2, Save, Eye, Edit2,
   Copy, Power, PowerOff, ChevronUp
 } from 'lucide-react';
+import Pagination from '../../components/Pagination';
 
 interface Role { roleId: number; roleName: string; }
 
@@ -28,8 +29,11 @@ const DEFAULT_STEP = (): WorkflowStepCreateDto => ({
 
 const WorkflowBuilder: React.FC = () => {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [roles, setRoles] = useState<Role[]>([]);
   const [loading, setLoading] = useState(true);
+  const limit = 10;
 
   // Create/Edit Form State
   const [isEditing, setIsEditing] = useState(false);
@@ -49,17 +53,18 @@ const WorkflowBuilder: React.FC = () => {
     setLoading(true);
     try {
       const [wf, r] = await Promise.all([
-        axiosInstance.get<Workflow[]>('/Workflow'),
+        axiosInstance.get<PaginatedResponse<Workflow>>(`/Workflow?page=${page}&limit=${limit}`),
         axiosInstance.get<Role[]>('/Admin/roles'),
       ]);
-      setWorkflows(wf.data);
+      setWorkflows(wf.data.data);
+      setTotal(wf.data.total);
       setRoles(r.data);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => { fetchAll(); }, [page]);
 
   const loadDetail = async (id: number) => {
     if (detailCache[id]) return;
@@ -374,6 +379,16 @@ const WorkflowBuilder: React.FC = () => {
               </div>
             ))}
           </div>
+        )}
+        
+        {!loading && Math.ceil(total / limit) > 1 && (
+          <Pagination
+            currentPage={page}
+            totalPages={Math.ceil(total / limit)}
+            totalItems={total}
+            pageSize={limit}
+            onPageChange={setPage}
+          />
         )}
       </div>
     </div>
