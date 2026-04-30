@@ -5,6 +5,8 @@ import MainLayout from '../layout/MainLayout';
 
 // Feature Imports
 import Login from '../features/auth/Login';
+import ForgotPassword from '../features/auth/ForgotPassword';
+import ResetPassword from '../features/auth/ResetPassword';
 import Dashboard from '../features/reports/Dashboard';
 import TaskList from '../features/tasks/TaskList';
 import TaskAssign from '../features/tasks/TaskAssign';
@@ -28,6 +30,8 @@ const AppRoutes: React.FC = () => {
     <Routes>
       {/* Public */}
       <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
       {/* Protected Layout */}
       <Route path="/" element={<PrivateRoute><MainLayout /></PrivateRoute>}>

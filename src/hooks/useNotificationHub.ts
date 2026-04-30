@@ -27,9 +27,10 @@ export const useNotificationHub = () => {
       setUnreadCount(prev => prev + 1);
     });
 
-    connection.start().catch(err =>
-      console.warn('SignalR connection failed:', err)
-    );
+    connection.start().catch(err => {
+      if (err.name === 'AbortError' || err.message?.includes('AbortError') || err.message?.includes('stop() was called')) return;
+      console.warn('SignalR connection failed:', err);
+    });
 
     connectionRef.current = connection;
   }, []);
