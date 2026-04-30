@@ -103,9 +103,9 @@ const Dashboard: React.FC = () => {
             {stats.tasksPerUser.map((u, i) => (
               <div key={i} className="px-6 py-3 flex items-center gap-4">
                 <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-bold text-gray-600 flex-shrink-0">
-                  {u.userName.charAt(0).toUpperCase()}
+                  {(u.userName || 'U').charAt(0).toUpperCase()}
                 </div>
-                <span className="flex-1 font-medium text-gray-700 text-sm">{u.userName}</span>
+                <span className="flex-1 font-medium text-gray-700 text-sm">{u.userName || 'Unknown User'}</span>
                 <div className="flex gap-3 text-xs">
                   {u.pendingCount > 0 && (
                     <span className="bg-yellow-50 text-yellow-700 px-2 py-1 rounded-full font-semibold">
