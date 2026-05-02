@@ -38,7 +38,7 @@ const AuditLog: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
             <History className="text-blue-600" /> System Audit Trail
@@ -56,10 +56,10 @@ const AuditLog: React.FC = () => {
           <table className="w-full text-left">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Timestamp</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Operator</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Action</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Target Entity</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase whitespace-nowrap">Timestamp</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase whitespace-nowrap">Operator</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase whitespace-nowrap">Action</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase whitespace-nowrap">Target Entity</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -77,11 +77,11 @@ const AuditLog: React.FC = () => {
               ) : (
                 logs.map((log, index) => (
                   <tr key={index} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 text-sm text-gray-600 font-mono flex items-center gap-2">
+                    <td className="px-6 py-4 text-sm text-gray-600 font-mono flex items-center gap-2 whitespace-nowrap">
                       <Calendar size={14} className="text-gray-400" />
                       {new Date(log.timestamp).toLocaleString()}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-2">
                         <div className="bg-gray-100 p-1.5 rounded-full text-gray-600">
                           <User size={14} />
@@ -89,7 +89,7 @@ const AuditLog: React.FC = () => {
                         <span className="font-medium text-gray-900 text-sm">{log.userName}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 py-1 rounded text-xs font-bold ${
                         log.action.includes('Delete') ? 'bg-red-50 text-red-700' : 
                         log.action.includes('Create') ? 'bg-green-50 text-green-700' : 
@@ -98,7 +98,7 @@ const AuditLog: React.FC = () => {
                         {log.action}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-xs text-gray-500 bg-gray-50 border border-gray-200 px-2 py-0.5 rounded">
                         {log.entityName}
                       </span>

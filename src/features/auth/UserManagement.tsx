@@ -74,7 +74,7 @@ const UserManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">User Management</h2>
           <p className="text-sm text-gray-500">Create and manage system stakeholders</p>
@@ -128,8 +128,8 @@ const UserManagement: React.FC = () => {
                 {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
               </select>
             </div>
-            <div className="lg:col-span-4 flex justify-end">
-              <button type="submit" className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 font-bold transition-colors">
+            <div className="col-span-1 md:col-span-2 lg:col-span-4 flex justify-end">
+              <button type="submit" className="w-full sm:w-auto bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 font-bold transition-colors">
                 Confirm Registration
               </button>
             </div>
@@ -143,11 +143,11 @@ const UserManagement: React.FC = () => {
           <table className="w-full text-left">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">User</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Email</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase">Role</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-center">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-right">Actions</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase whitespace-nowrap">User</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase whitespace-nowrap">Email</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase whitespace-nowrap">Role</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-center whitespace-nowrap">Status</th>
+                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-right whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -156,22 +156,22 @@ const UserManagement: React.FC = () => {
               ) : (
                 users.map(u => (
                   <tr key={u.userId} className="hover:bg-gray-50 transition-colors group">
-                    <td className="px-6 py-4 flex items-center gap-3">
+                    <td className="px-6 py-4 flex items-center gap-3 whitespace-nowrap">
                       <div className="bg-blue-100 p-2 rounded-full text-blue-600 group-hover:bg-blue-200 transition-colors">
                         <UserIcon size={16} />
                       </div>
                       <span className="font-medium text-gray-900">{u.name}</span>
                     </td>
-                    <td className="px-6 py-4 text-gray-600 text-sm">{u.email}</td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 text-gray-600 text-sm whitespace-nowrap">{u.email}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <span className="px-3 py-1 bg-gray-100 text-gray-700 text-[10px] font-bold rounded-full uppercase border border-gray-200">
                         {roles.find(r => r.id === u.roleId)?.name || 'User'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-6 py-4 text-center whitespace-nowrap">
                       <CheckCircle size={18} className="text-green-500 inline" />
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right whitespace-nowrap">
                       <button 
                         onClick={() => handleDelete(u.userId, u.name)}
                         className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"

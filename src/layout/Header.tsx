@@ -1,11 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Bell, CheckCheck } from 'lucide-react';
+import { LogOut, Bell, CheckCheck, Menu } from 'lucide-react';
 import { useNotificationHub } from '../hooks/useNotificationHub';
 import axiosInstance from '../api/axiosInstance';
 import type { Notification, NotificationPaginatedResponse } from '../models';
 
-const Header: React.FC = () => {
+interface HeaderProps {
+  onMenuClick: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
   const { user, role, logout } = useAuth();
   const { unreadCount, clearUnread } = useNotificationHub();
 
@@ -41,10 +45,19 @@ const Header: React.FC = () => {
   }, []);
 
   return (
-    <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-6 shrink-0">
-      <h1 className="text-xl font-semibold text-gray-800">SmartWorkFlowX</h1>
+    <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 sm:px-6 shrink-0">
+      <div className="flex items-center gap-3">
+        <button 
+          onClick={onMenuClick}
+          className="md:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <Menu size={24} />
+        </button>
+        <h1 className="text-xl font-semibold text-gray-800 hidden sm:block">SmartWorkFlowX</h1>
+        <h1 className="text-xl font-semibold text-gray-800 sm:hidden">SWFX</h1>
+      </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         {/* ── Notification Bell ── */}
         <div ref={bellRef} className="relative">
           <button
@@ -98,19 +111,20 @@ const Header: React.FC = () => {
         <div className="h-6 w-px bg-gray-200" />
 
         {/* User Info */}
-        <div className="flex flex-col text-right">
+        <div className="flex flex-col text-right hidden sm:flex">
           <span className="text-sm font-medium text-gray-900">{user?.email}</span>
           <span className="text-xs text-blue-600 font-bold uppercase tracking-wider">{role}</span>
         </div>
 
-        <div className="h-6 w-px bg-gray-200" />
+        <div className="h-6 w-px bg-gray-200 hidden sm:block" />
 
         <button
           onClick={logout}
           className="flex items-center gap-2 text-gray-500 hover:text-red-600 transition-colors"
+          title="Logout"
         >
           <LogOut size={20} />
-          <span className="text-sm font-medium">Logout</span>
+          <span className="text-sm font-medium hidden sm:inline">Logout</span>
         </button>
       </div>
     </header>

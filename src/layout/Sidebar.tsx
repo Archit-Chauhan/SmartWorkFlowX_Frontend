@@ -7,10 +7,16 @@ import {
   GitBranch,
   Users,
   History,
-  Send
+  Send,
+  X
 } from 'lucide-react';
 
-const Sidebar: React.FC = () => {
+interface SidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { role } = useAuth();
 
   const navItems = [
@@ -54,37 +60,60 @@ const Sidebar: React.FC = () => {
   ];
 
   return (
-    <aside className="w-64 bg-gray-900 text-white flex flex-col shrink-0">
-      <div className="p-6 text-2xl font-bold border-b border-gray-800">
-        SWFX <span className="text-blue-500">Pro</span>
-      </div>
+    <>
+      {/* Mobile Backdrop */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 z-40 bg-black/50 md:hidden" 
+          onClick={onClose}
+        />
+      )}
 
-      <nav className="flex-1 mt-6 px-3 space-y-1">
-        {navItems
-          .filter(item => item.roles.includes(role || ''))
-          .map(item => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.exact}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                  isActive
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-400 hover:bg-gray-800 hover:text-white'
-                }`
-              }
-            >
-              {item.icon}
-              <span className="font-medium">{item.label}</span>
-            </NavLink>
-          ))}
-      </nav>
+      {/* Sidebar Content */}
+      <aside 
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white flex flex-col shrink-0 transition-transform duration-300 ease-in-out md:static md:translate-x-0 ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="p-6 text-2xl font-bold border-b border-gray-800 flex justify-between items-center">
+          <div>SWFX <span className="text-blue-500">Pro</span></div>
+          <button className="md:hidden text-gray-400 hover:text-white" onClick={onClose}>
+            <X size={24} />
+          </button>
+        </div>
 
-      <div className="p-4 border-t border-gray-800 text-xs text-gray-600 text-center">
-        SmartWorkFlowX v2.0
-      </div>
-    </aside>
+        <nav className="flex-1 mt-6 px-3 space-y-1 overflow-y-auto">
+          {navItems
+            .filter(item => item.roles.includes(role || ''))
+            .map(item => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.exact}
+                onClick={() => {
+                  if (window.innerWidth < 768) {
+                    onClose();
+                  }
+                }}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                    isActive
+                      ? 'bg-blue-600 text-white'
+                      : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+                  }`
+                }
+              >
+                {item.icon}
+                <span className="font-medium">{item.label}</span>
+              </NavLink>
+            ))}
+        </nav>
+
+        <div className="p-4 border-t border-gray-800 text-xs text-gray-600 text-center">
+          SmartWorkFlowX v2.0
+        </div>
+      </aside>
+    </>
   );
 };
 

@@ -89,7 +89,7 @@ const TaskAssign: React.FC = () => {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Workflow (Active only) <span className="text-red-500">*</span></label>
               <select
@@ -120,10 +120,10 @@ const TaskAssign: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 {(['Low', 'Medium', 'High'] as TaskPriority[]).map(p => (
                   <button
                     key={p} type="button"

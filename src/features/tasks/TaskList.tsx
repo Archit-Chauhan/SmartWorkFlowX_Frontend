@@ -124,10 +124,10 @@ const TaskList: React.FC = () => {
   const renderTaskCard = (task: TaskItem, showActions: boolean) => (
     <div key={task.taskId} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
       {/* Main Row */}
-      <div className="p-5 flex flex-wrap gap-4 items-center justify-between">
-        <div className="flex items-center gap-4 flex-1 min-w-0">
+      <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+        <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
           {/* Priority flag */}
-          <div className={`p-2 rounded-lg border ${PRIORITY_STYLES[task.priority] || PRIORITY_STYLES.Medium}`}>
+          <div className={`p-2 flex-shrink-0 rounded-lg border ${PRIORITY_STYLES[task.priority] || PRIORITY_STYLES.Medium}`}>
             <Flag size={16} />
           </div>
           <div className="min-w-0">
@@ -145,7 +145,7 @@ const TaskList: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-3 flex-shrink-0">
           {/* Priority badge */}
           <span className={`text-xs font-bold px-2 py-1 rounded-full border ${PRIORITY_STYLES[task.priority]}`}>
             {task.priority}

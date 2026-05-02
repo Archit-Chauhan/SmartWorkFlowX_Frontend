@@ -221,39 +221,43 @@ const WorkflowBuilder: React.FC = () => {
 
           <div className="space-y-3">
             {steps.map((step, idx) => (
-              <div key={idx} className="grid gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                <div className="flex items-center gap-3">
-                  <span className="w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
-                    {step.stepOrder}
-                  </span>
-                  <input
-                    className="flex-1 p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-200 outline-none"
-                    placeholder="Step Name (e.g., Manager Review)"
-                    value={step.stepName}
-                    onChange={e => updateStep(idx, 'stepName', e.target.value)}
-                  />
-                  <select
-                    className="p-2 border border-gray-200 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-200 outline-none"
-                    value={step.approverRoleId}
-                    onChange={e => updateStep(idx, 'approverRoleId', parseInt(e.target.value))}
-                  >
-                    {roles.map(r => <option key={r.roleId} value={r.roleId}>{r.roleName}</option>)}
-                  </select>
-                  <button onClick={() => removeStep(idx)} className="text-red-400 hover:text-red-600 p-1 rounded transition-colors">
-                    <Trash2 size={17} />
-                  </button>
+              <div key={idx} className="flex flex-col gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div className="flex items-center gap-3 w-full sm:w-auto flex-1">
+                    <span className="w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
+                      {step.stepOrder}
+                    </span>
+                    <input
+                      className="flex-1 p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-200 outline-none min-w-0"
+                      placeholder="Step Name (e.g., Manager Review)"
+                      value={step.stepName}
+                      onChange={e => updateStep(idx, 'stepName', e.target.value)}
+                    />
+                  </div>
+                  <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <select
+                      className="flex-1 p-2 border border-gray-200 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-200 outline-none"
+                      value={step.approverRoleId}
+                      onChange={e => updateStep(idx, 'approverRoleId', parseInt(e.target.value))}
+                    >
+                      {roles.map(r => <option key={r.roleId} value={r.roleId}>{r.roleName}</option>)}
+                    </select>
+                    <button onClick={() => removeStep(idx)} className="text-red-400 hover:text-red-600 p-1 rounded transition-colors flex-shrink-0">
+                      <Trash2 size={17} />
+                    </button>
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 pl-10">
+                <div className="flex flex-col sm:flex-row gap-3 sm:pl-10">
                   <input
-                    className="p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-200 outline-none"
+                    className="flex-1 p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-200 outline-none min-w-0"
                     placeholder="Instructions for approver (optional)"
                     value={step.description || ''}
                     onChange={e => updateStep(idx, 'description', e.target.value)}
                   />
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                     <select
-                      className="flex-1 p-2 border border-gray-200 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-200 outline-none"
+                      className="w-full sm:w-48 p-2 border border-gray-200 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-200 outline-none"
                       value={step.onRejectAction}
                       onChange={e => updateStep(idx, 'onRejectAction', e.target.value as OnRejectAction)}
                     >
@@ -262,7 +266,7 @@ const WorkflowBuilder: React.FC = () => {
                     </select>
                     <input
                       type="number"
-                      className="w-24 p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-200 outline-none"
+                      className="w-full sm:w-24 p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-200 outline-none"
                       placeholder="Esc. hrs"
                       title="Escalation hours (optional)"
                       min={1}
@@ -355,23 +359,27 @@ const WorkflowBuilder: React.FC = () => {
                 {expandedId === wf.workflowId && detailCache[wf.workflowId] && (
                   <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 space-y-2">
                     {detailCache[wf.workflowId].steps.map(s => (
-                      <div key={s.stepId} className="flex items-center gap-3 text-sm text-gray-600">
-                        <span className="w-6 h-6 flex-shrink-0 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">
-                          {s.stepOrder}
-                        </span>
-                        <span className="font-semibold text-gray-700">{s.stepName}</span>
-                        <span className="text-gray-400">→ {s.approverRoleName}</span>
-                        {s.description && <span className="text-gray-400 italic text-xs">· {s.description}</span>}
-                        <span className={`ml-auto text-xs px-2 py-0.5 rounded-full ${
-                          s.onRejectAction === 'GoBack' ? 'bg-orange-50 text-orange-600' : 'bg-gray-100 text-gray-500'
-                        }`}>
-                          {s.onRejectAction === 'GoBack' ? '↩ GoBack' : '✕ Cancel'}
-                        </span>
-                        {s.escalationHours && (
-                          <span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
-                            ⏱ {s.escalationHours}h
+                      <div key={s.stepId} className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 text-sm text-gray-600 bg-white p-3 rounded-lg border border-gray-100">
+                        <div className="flex items-center gap-3 w-full sm:w-auto flex-1 min-w-0">
+                          <span className="w-6 h-6 flex-shrink-0 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">
+                            {s.stepOrder}
                           </span>
-                        )}
+                          <span className="font-semibold text-gray-700 truncate">{s.stepName}</span>
+                          <span className="text-gray-400 whitespace-nowrap">→ {s.approverRoleName}</span>
+                        </div>
+                        {s.description && <span className="text-gray-400 italic text-xs w-full sm:w-auto truncate">· {s.description}</span>}
+                        <div className="flex gap-2 w-full sm:w-auto sm:ml-auto">
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            s.onRejectAction === 'GoBack' ? 'bg-orange-50 text-orange-600' : 'bg-gray-100 text-gray-500'
+                          }`}>
+                            {s.onRejectAction === 'GoBack' ? '↩ GoBack' : '✕ Cancel'}
+                          </span>
+                          {s.escalationHours && (
+                            <span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                              ⏱ {s.escalationHours}h
+                            </span>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
