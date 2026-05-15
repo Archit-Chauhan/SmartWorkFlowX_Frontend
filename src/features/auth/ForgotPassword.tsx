@@ -1,34 +1,49 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import { Mail, AlertCircle, CheckCircle2, ArrowLeft, Loader2 } from 'lucide-react';
+import { Turnstile } from '@marsidev/react-turnstile';
+import type { TurnstileInstance } from '@marsidev/react-turnstile';
+
+const SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY as string;
 
 const ForgotPassword: React.FC = () => {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileInstance>(null);
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
 
+    if (!turnstileToken) {
+      setStatus({ type: 'error', text: 'Please complete the security check.' });
+      return;
+    }
+
     setStatus(null);
     setIsSubmitting(true);
 
     try {
-      // Pass origin header if necessary, but axios usually sends it.
-      await axiosInstance.post('/Auth/forgot-password', { email });
+      await axiosInstance.post('/Auth/forgot-password', { email, turnstileToken });
       setStatus({ 
         type: 'success', 
         text: 'If an account with that email exists, a password reset link has been sent to your inbox.' 
       });
       setEmail('');
+      setTurnstileToken(null);
+      turnstileRef.current?.reset();
     } catch (err: any) {
       setStatus({ 
         type: 'error', 
         text: err.response?.data || 'An error occurred. Please try again later.' 
       });
+      // Reset captcha on error so user can retry
+      setTurnstileToken(null);
+      turnstileRef.current?.reset();
     } finally {
       setIsSubmitting(false);
     }
@@ -83,10 +98,25 @@ const ForgotPassword: React.FC = () => {
             />
           </div>
 
+          {/* Cloudflare Turnstile Widget */}
+          <div className="flex justify-center">
+            <Turnstile
+              ref={turnstileRef}
+              siteKey={SITE_KEY}
+              onSuccess={(token) => setTurnstileToken(token)}
+              onExpire={() => setTurnstileToken(null)}
+              onError={() => {
+                setTurnstileToken(null);
+                setStatus({ type: 'error', text: 'Security check failed. Please refresh and try again.' });
+              }}
+              options={{ theme: 'light', size: 'normal' }}
+            />
+          </div>
+
           <div>
             <button
               type="submit"
-              disabled={isSubmitting || !email.trim()}
+              disabled={isSubmitting || !email.trim() || !turnstileToken}
               className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
