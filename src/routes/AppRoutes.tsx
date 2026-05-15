@@ -7,6 +7,7 @@ import MainLayout from '../layout/MainLayout';
 import Login from '../features/auth/Login';
 import ForgotPassword from '../features/auth/ForgotPassword';
 import ResetPassword from '../features/auth/ResetPassword';
+import OAuthCallback from '../features/auth/OAuthCallback';
 import Dashboard from '../features/reports/Dashboard';
 import TaskList from '../features/tasks/TaskList';
 import TaskAssign from '../features/tasks/TaskAssign';
@@ -32,6 +33,7 @@ const AppRoutes: React.FC = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
+      <Route path="/oauth-callback" element={<OAuthCallback />} />
 
       {/* Protected Layout */}
       <Route path="/" element={<PrivateRoute><MainLayout /></PrivateRoute>}>
