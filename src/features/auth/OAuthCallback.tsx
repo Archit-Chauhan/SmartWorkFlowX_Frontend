@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 const OAuthCallback: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { setAuthData } = useAuth(); // Assume we might need to expose this, or we handle it via a manual login state update
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
