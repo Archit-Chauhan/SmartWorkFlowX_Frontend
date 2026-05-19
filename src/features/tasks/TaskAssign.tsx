@@ -33,7 +33,7 @@ const TaskAssign: React.FC = () => {
     reset,
     formState: { errors, isSubmitting }
   } = useForm<TaskAssignFormValues>({
-    resolver: zodResolver(taskAssignSchema),
+    resolver: zodResolver(taskAssignSchema) as any,
     defaultValues: {
       workflowId: 0,
       assignedTo: 0,

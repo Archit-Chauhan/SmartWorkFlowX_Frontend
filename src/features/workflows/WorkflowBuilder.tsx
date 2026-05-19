@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axiosInstance from '../../api/axiosInstance';
 import type {
   Workflow, WorkflowDetail, WorkflowStepCreateDto,
-  WorkflowCreateRequest, OnRejectAction, PaginatedResponse
+  WorkflowCreateRequest, PaginatedResponse
 } from '../../models';
 import {
   GitPullRequest, Plus, Trash2, Save, Eye, Edit2,
@@ -66,7 +66,7 @@ const WorkflowBuilder: React.FC = () => {
   const [detailCache, setDetailCache] = useState<Record<number, WorkflowDetail>>({});
 
   const { register, control, handleSubmit, reset, setValue, watch, formState: { errors, isSubmitting } } = useForm<WorkflowFormValues>({
-    resolver: zodResolver(workflowSchema),
+    resolver: zodResolver(workflowSchema) as any,
     defaultValues: {
       title: '',
       description: '',
@@ -119,7 +119,7 @@ const WorkflowBuilder: React.FC = () => {
     remove(idx);
     // Re-order steps after removal
     const currentSteps = watch('steps');
-    currentSteps.forEach((s, i) => setValue(`steps.${i}.stepOrder`, i + 1));
+    currentSteps.forEach((_: any, i: number) => setValue(`steps.${i}.stepOrder`, i + 1));
   };
 
   const resetForm = () => {
@@ -271,7 +271,7 @@ const WorkflowBuilder: React.FC = () => {
           {errors.steps?.root && <p className="mb-2 text-sm text-red-500">{errors.steps.root.message}</p>}
 
           <div className="space-y-3">
-            {fields.map((field, idx) => (
+            {fields.map((field: any, idx: number) => (
               <div key={field.id} className="flex flex-col gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                   <div className="flex items-center gap-3 w-full sm:w-auto flex-1">
