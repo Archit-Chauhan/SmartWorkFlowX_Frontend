@@ -2,20 +2,42 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import { Lock, AlertCircle, CheckCircle2, Loader2, Eye, EyeOff } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+
+const resetPasswordSchema = z.object({
+  password: z.string().min(6, 'Password must be at least 6 characters long.'),
+  confirmPassword: z.string()
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords do not match.",
+  path: ["confirmPassword"]
+});
+
+type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
 const ResetPassword: React.FC = () => {
   const [searchParams] = useSearchParams();
   const email = searchParams.get('email');
   const token = searchParams.get('token');
 
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [status, setStatus] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
   const navigate = useNavigate();
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting }
+  } = useForm<ResetPasswordFormValues>({
+    resolver: zodResolver(resetPasswordSchema)
+  });
+
+  const passwordValue = watch('password');
+  const confirmPasswordValue = watch('confirmPassword');
 
   useEffect(() => {
     if (!email || !token) {
@@ -26,28 +48,14 @@ const ResetPassword: React.FC = () => {
     }
   }, [email, token]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!password || !confirmPassword) return;
-    
-    if (password !== confirmPassword) {
-      setStatus({ type: 'error', text: 'Passwords do not match.' });
-      return;
-    }
-
-    if (password.length < 6) {
-        setStatus({ type: 'error', text: 'Password must be at least 6 characters long.' });
-        return;
-    }
-
+  const onSubmit = async (data: ResetPasswordFormValues) => {
     setStatus(null);
-    setIsSubmitting(true);
 
     try {
       await axiosInstance.post('/Auth/reset-password', { 
         email, 
         token, 
-        newPassword: password 
+        newPassword: data.password 
       });
       
       setStatus({ 
@@ -63,8 +71,6 @@ const ResetPassword: React.FC = () => {
         type: 'error', 
         text: err.response?.data || 'Failed to reset password. The token may be expired.' 
       });
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -98,7 +104,7 @@ const ResetPassword: React.FC = () => {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           {status && (
             <div className={`p-4 rounded-lg flex items-start gap-3 ${
               status.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
@@ -119,13 +125,10 @@ const ResetPassword: React.FC = () => {
                     <Lock className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
-                    name="password"
                     type={showPassword ? 'text' : 'password'}
-                    required
-                    className="appearance-none rounded-lg relative block w-full pl-10 pr-10 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                    className={`appearance-none rounded-lg relative block w-full pl-10 pr-10 py-3 border ${errors.password ? 'border-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                     placeholder="New Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    {...register('password')}
                   />
                   <button
                     type="button"
@@ -135,6 +138,7 @@ const ResetPassword: React.FC = () => {
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
+                  {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>}
                 </div>
 
                 <div className="relative">
@@ -142,13 +146,10 @@ const ResetPassword: React.FC = () => {
                     <Lock className="h-5 w-5 text-gray-400" />
                   </div>
                   <input
-                    name="confirmPassword"
                     type={showConfirmPassword ? 'text' : 'password'}
-                    required
-                    className="appearance-none rounded-lg relative block w-full pl-10 pr-10 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+                    className={`appearance-none rounded-lg relative block w-full pl-10 pr-10 py-3 border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
                     placeholder="Confirm New Password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    {...register('confirmPassword')}
                   />
                   <button
                     type="button"
@@ -158,11 +159,12 @@ const ResetPassword: React.FC = () => {
                   >
                     {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
+                  {errors.confirmPassword && <p className="mt-1 text-sm text-red-500">{errors.confirmPassword.message}</p>}
                 </div>
 
                 <button
                   type="submit"
-                  disabled={isSubmitting || !password || !confirmPassword}
+                  disabled={isSubmitting || !passwordValue || !confirmPasswordValue}
                   className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
