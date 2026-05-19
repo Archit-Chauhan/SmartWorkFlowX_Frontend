@@ -4,36 +4,49 @@ import axiosInstance from '../../api/axiosInstance';
 import { Mail, AlertCircle, CheckCircle2, ArrowLeft, Loader2 } from 'lucide-react';
 import { Turnstile } from '@marsidev/react-turnstile';
 import type { TurnstileInstance } from '@marsidev/react-turnstile';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 
 const SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY as string;
 
+const forgotPasswordSchema = z.object({
+  email: z.string().min(1, 'Email is required').email('Invalid email address')
+});
+
+type ForgotPasswordFormValues = z.infer<typeof forgotPasswordSchema>;
+
 const ForgotPassword: React.FC = () => {
-  const [email, setEmail] = useState('');
   const [status, setStatus] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const turnstileRef = useRef<TurnstileInstance>(null);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim()) return;
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting }
+  } = useForm<ForgotPasswordFormValues>({
+    resolver: zodResolver(forgotPasswordSchema)
+  });
 
+  const emailValue = watch('email');
+
+  const onSubmit = async (data: ForgotPasswordFormValues) => {
     if (!turnstileToken) {
       setStatus({ type: 'error', text: 'Please complete the security check.' });
       return;
     }
 
     setStatus(null);
-    setIsSubmitting(true);
 
     try {
-      await axiosInstance.post('/Auth/forgot-password', { email, turnstileToken });
+      await axiosInstance.post('/Auth/forgot-password', { email: data.email, turnstileToken });
       setStatus({ 
         type: 'success', 
         text: 'If an account with that email exists, a password reset link has been sent to your inbox.' 
       });
-      setEmail('');
       setTurnstileToken(null);
       turnstileRef.current?.reset();
     } catch (err: any) {
@@ -44,8 +57,6 @@ const ForgotPassword: React.FC = () => {
       // Reset captcha on error so user can retry
       setTurnstileToken(null);
       turnstileRef.current?.reset();
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -54,6 +65,7 @@ const ForgotPassword: React.FC = () => {
       <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg border border-gray-100">
         <div>
           <button 
+            type="button"
             onClick={() => navigate('/login')}
             className="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors mb-6"
           >
@@ -67,7 +79,7 @@ const ForgotPassword: React.FC = () => {
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           {status && (
             <div className={`p-4 rounded-lg flex items-start gap-3 ${
               status.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
@@ -88,14 +100,12 @@ const ForgotPassword: React.FC = () => {
             </div>
             <input
               id="email-address"
-              name="email"
               type="email"
-              required
-              className="appearance-none rounded-lg relative block w-full px-10 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
+              className={`appearance-none rounded-lg relative block w-full px-10 py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
               placeholder="Enter your email address"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              {...register('email')}
             />
+            {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>}
           </div>
 
           {/* Cloudflare Turnstile Widget */}
@@ -116,7 +126,7 @@ const ForgotPassword: React.FC = () => {
           <div>
             <button
               type="submit"
-              disabled={isSubmitting || !email.trim() || !turnstileToken}
+              disabled={isSubmitting || !emailValue?.trim() || !turnstileToken}
               className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (

@@ -2,12 +2,16 @@ import React, { useEffect, useState } from 'react';
 import axiosInstance from '../../api/axiosInstance';
 import type { User, UserRole, PaginatedResponse } from '../../models';
 import { UserPlus, User as UserIcon, CheckCircle, Trash2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 import Pagination from '../../components/Pagination';
+import ConfirmationModal from '../../components/ConfirmationModal';
 
 const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; userId: number | null; userName: string }>({ isOpen: false, userId: null, userName: '' });
+  const [isDeleting, setIsDeleting] = useState(false);
   
   // Pagination State
   const [page, setPage] = useState(1);
@@ -44,22 +48,30 @@ const UserManagement: React.FC = () => {
       setShowForm(false);
       setFormData({ name: '', email: '', password: '', roleId: 3 });
       fetchUsers(); // Refresh the list
-      alert("User registered successfully!");
-    } catch (err) {
-      alert("Error registering user. Ensure email is unique.");
+      toast.success("User registered successfully!");
+    } catch (err: any) {
+      const message = err.response?.data?.message || "Error registering user.";
+      toast.error(message);
     }
   };
 
   const handleDelete = async (userId: number, userName: string) => {
-    if (window.confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
-      try {
-        await axiosInstance.delete(`/Admin/users/${userId}`);
-        fetchUsers(); // Fetch fresh paginated data
-        alert("User deleted successfully.");
-      } catch (err: any) {
-        const message = err.response?.data?.message || "Error deleting user.";
-        alert(message);
-      }
+    setDeleteModal({ isOpen: true, userId, userName });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteModal.userId) return;
+    setIsDeleting(true);
+    try {
+      await axiosInstance.delete(`/Admin/users/${deleteModal.userId}`);
+      fetchUsers(); // Fetch fresh paginated data
+      toast.success("User deleted successfully.");
+      setDeleteModal({ isOpen: false, userId: null, userName: '' });
+    } catch (err: any) {
+      const message = err.response?.data?.message || "Error deleting user.";
+      toast.error(message);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -200,6 +212,18 @@ const UserManagement: React.FC = () => {
           />
         )}
       </div>
+
+      <ConfirmationModal
+        isOpen={deleteModal.isOpen}
+        title="Delete User"
+        message={`Are you sure you want to delete ${deleteModal.userName}? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isDangerous={true}
+        isLoading={isDeleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteModal({ isOpen: false, userId: null, userName: '' })}
+      />
     </div>
   );
 };
