@@ -6,9 +6,12 @@ import type {
 } from '../../models';
 import {
   GitPullRequest, Plus, Trash2, Save, Eye, Edit2,
-  Copy, Power, PowerOff, ChevronUp
+  Copy, Power, PowerOff, ChevronUp, AlertCircle
 } from 'lucide-react';
 import Pagination from '../../components/Pagination';
+import { useForm, useFieldArray } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 
 interface Role { roleId: number; roleName: string; }
 
@@ -18,14 +21,32 @@ const STATUS_STYLES: Record<string, string> = {
   Inactive: 'bg-gray-100 text-gray-500',
 };
 
-const DEFAULT_STEP = (): WorkflowStepCreateDto => ({
+const workflowStepSchema = z.object({
+  stepOrder: z.number(),
+  approverRoleId: z.coerce.number().min(1, 'Role is required'),
+  stepName: z.string().min(1, 'Step name is required'),
+  description: z.string().optional(),
+  onRejectAction: z.enum(['GoBack', 'Cancel']),
+  escalationHours: z.coerce.number().optional().nullable().transform(val => val ? val : undefined)
+});
+
+const workflowSchema = z.object({
+  title: z.string().min(1, 'Workflow title is required'),
+  description: z.string().optional(),
+  status: z.enum(['Draft', 'Active', 'Inactive']),
+  steps: z.array(workflowStepSchema).min(1, 'At least one step is required')
+});
+
+type WorkflowFormValues = z.infer<typeof workflowSchema>;
+
+const DEFAULT_STEP = {
   stepOrder: 1,
   approverRoleId: 2,
   stepName: '',
   description: '',
-  onRejectAction: 'Cancel',
-  escalationHours: undefined,
-});
+  onRejectAction: 'Cancel' as const,
+  escalationHours: undefined
+};
 
 const WorkflowBuilder: React.FC = () => {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
@@ -35,19 +56,31 @@ const WorkflowBuilder: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const limit = 10;
 
-  // Create/Edit Form State
+  // Edit State
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [status, setStatus] = useState<string>('Draft');
-  const [steps, setSteps] = useState<WorkflowStepCreateDto[]>([DEFAULT_STEP()]);
   const [formError, setFormError] = useState('');
-  const [saving, setSaving] = useState(false);
 
   // Detail view
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [detailCache, setDetailCache] = useState<Record<number, WorkflowDetail>>({});
+
+  const { register, control, handleSubmit, reset, setValue, watch, formState: { errors, isSubmitting } } = useForm<WorkflowFormValues>({
+    resolver: zodResolver(workflowSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      status: 'Draft',
+      steps: [DEFAULT_STEP]
+    }
+  });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "steps"
+  });
+
+  const statusValue = watch('status');
 
   const fetchAll = async () => {
     setLoading(true);
@@ -78,26 +111,23 @@ const WorkflowBuilder: React.FC = () => {
     loadDetail(id);
   };
 
-  // ── Form helpers ──────────────────────────────────────────
   const addStep = () => {
-    const order = steps.length + 1;
-    setSteps([...steps, { ...DEFAULT_STEP(), stepOrder: order }]);
+    append({ ...DEFAULT_STEP, stepOrder: fields.length + 1 });
   };
 
   const removeStep = (idx: number) => {
-    setSteps(steps.filter((_, i) => i !== idx).map((s, i) => ({ ...s, stepOrder: i + 1 })));
-  };
-
-  const updateStep = <K extends keyof WorkflowStepCreateDto>(idx: number, key: K, val: WorkflowStepCreateDto[K]) => {
-    const copy = [...steps];
-    copy[idx] = { ...copy[idx], [key]: val };
-    setSteps(copy);
+    remove(idx);
+    // Re-order steps after removal
+    const currentSteps = watch('steps');
+    currentSteps.forEach((s, i) => setValue(`steps.${i}.stepOrder`, i + 1));
   };
 
   const resetForm = () => {
-    setIsEditing(false); setEditId(null);
-    setTitle(''); setDescription(''); setStatus('Draft');
-    setSteps([DEFAULT_STEP()]); setFormError('');
+    setIsEditing(false); setEditId(null); setFormError('');
+    reset({
+      title: '', description: '', status: 'Draft',
+      steps: [DEFAULT_STEP]
+    });
   };
 
   const populateEditForm = async (id: number) => {
@@ -107,31 +137,37 @@ const WorkflowBuilder: React.FC = () => {
       detail = res.data;
       setDetailCache(prev => ({ ...prev, [id]: detail }));
     }
-    setTitle(detail.title);
-    setDescription(detail.description || '');
-    setStatus(detail.status);
-    setSteps(detail.steps.map(s => ({
-      stepOrder: s.stepOrder,
-      approverRoleId: roles.find(r => r.roleName === s.approverRoleName)?.roleId ?? 2,
-      stepName: s.stepName,
-      description: s.description || '',
-      onRejectAction: s.onRejectAction,
-      escalationHours: s.escalationHours,
-    })));
+    
+    reset({
+      title: detail.title,
+      description: detail.description || '',
+      status: detail.status as any,
+      steps: detail.steps.map(s => ({
+        stepOrder: s.stepOrder,
+        approverRoleId: roles.find(r => r.roleName === s.approverRoleName)?.roleId ?? 2,
+        stepName: s.stepName,
+        description: s.description || '',
+        onRejectAction: s.onRejectAction as any,
+        escalationHours: s.escalationHours,
+      }))
+    });
+    
     setEditId(id);
     setIsEditing(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSave = async () => {
-    if (!title.trim()) { setFormError('Workflow title is required.'); return; }
-    if (steps.some(s => !s.stepName.trim())) { setFormError('Every step needs a name.'); return; }
-    setSaving(true); setFormError('');
+  const onSubmit = async (data: WorkflowFormValues) => {
+    setFormError('');
     try {
       if (editId) {
-        await axiosInstance.put(`/Workflow/${editId}`, { title, description, status, steps });
+        await axiosInstance.put(`/Workflow/${editId}`, data);
       } else {
-        const body: WorkflowCreateRequest = { title, description, steps };
+        const body: WorkflowCreateRequest = { 
+          title: data.title, 
+          description: data.description || '', 
+          steps: data.steps as WorkflowStepCreateDto[] 
+        };
         await axiosInstance.post('/Workflow', body);
       }
       await fetchAll();
@@ -139,8 +175,6 @@ const WorkflowBuilder: React.FC = () => {
       resetForm();
     } catch (err: any) {
       setFormError(err.response?.data?.message || 'Failed to save workflow.');
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -156,15 +190,18 @@ const WorkflowBuilder: React.FC = () => {
   };
 
   const handleActivate = async (wf: Workflow) => {
-    const detail = detailCache[wf.workflowId];
-    if (!detail) { await populateEditForm(wf.workflowId); return; }
+    let detail = detailCache[wf.workflowId];
+    if (!detail) { 
+      const res = await axiosInstance.get<WorkflowDetail>(`/Workflow/${wf.workflowId}`);
+      detail = res.data;
+    }
     await axiosInstance.put(`/Workflow/${wf.workflowId}`, {
-      title: detail.title, description: detail.description,
+      title: detail.title, description: detail.description || '',
       status: 'Active',
       steps: detail.steps.map(s => ({
         stepOrder: s.stepOrder,
         approverRoleId: roles.find(r => r.roleName === s.approverRoleName)?.roleId ?? 2,
-        stepName: s.stepName, description: s.description,
+        stepName: s.stepName, description: s.description || '',
         onRejectAction: s.onRejectAction, escalationHours: s.escalationHours,
       })),
     });
@@ -174,7 +211,6 @@ const WorkflowBuilder: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
-
       {/* ── Create / Edit Form ─────────────────────────────── */}
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
         <h2 className="text-xl font-bold flex items-center gap-2 mb-5">
@@ -182,27 +218,40 @@ const WorkflowBuilder: React.FC = () => {
           {editId ? 'Edit Workflow Template' : 'Create Workflow Template'}
         </h2>
 
+        {formError && (
+          <div className="mb-4 bg-red-50 border-l-4 border-red-400 p-4 flex items-center gap-3">
+            <AlertCircle className="text-red-400" size={20} />
+            <p className="text-sm text-red-700">{formError}</p>
+          </div>
+        )}
+
         <div className="grid gap-4">
-          <input
-            className="p-3 border border-gray-200 rounded-lg w-full focus:ring-2 focus:ring-blue-200 outline-none"
-            placeholder="Workflow Title (e.g., Expense Approval)"
-            value={title} onChange={e => setTitle(e.target.value)}
-          />
+          <div>
+            <input
+              className={`p-3 border rounded-lg w-full focus:ring-2 focus:ring-blue-200 outline-none ${errors.title ? 'border-red-500' : 'border-gray-200'}`}
+              placeholder="Workflow Title (e.g., Expense Approval)"
+              {...register('title')}
+            />
+            {errors.title && <p className="mt-1 text-sm text-red-500">{errors.title.message}</p>}
+          </div>
+
           <textarea
             className="p-3 border border-gray-200 rounded-lg w-full resize-none focus:ring-2 focus:ring-blue-200 outline-none"
             rows={2}
             placeholder="Description..."
-            value={description} onChange={e => setDescription(e.target.value)}
+            {...register('description')}
           />
+
           {editId && (
             <div className="flex items-center gap-3">
               <label className="text-sm font-medium text-gray-600">Status:</label>
               {(['Draft', 'Active', 'Inactive'] as const).map(s => (
                 <button
                   key={s}
-                  onClick={() => setStatus(s)}
+                  type="button"
+                  onClick={() => setValue('status', s)}
                   className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${
-                    status === s ? STATUS_STYLES[s] + ' border-current' : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                    statusValue === s ? STATUS_STYLES[s] + ' border-current' : 'border-gray-200 text-gray-500 hover:border-gray-300'
                   }`}
                 >{s}</button>
               ))}
@@ -214,52 +263,54 @@ const WorkflowBuilder: React.FC = () => {
         <div className="mt-6">
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-semibold text-gray-700">Approval Steps</h3>
-            <button onClick={addStep} className="flex items-center gap-1 text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors">
+            <button type="button" onClick={addStep} className="flex items-center gap-1 text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors">
               <Plus size={15} /> Add Step
             </button>
           </div>
 
+          {errors.steps?.root && <p className="mb-2 text-sm text-red-500">{errors.steps.root.message}</p>}
+
           <div className="space-y-3">
-            {steps.map((step, idx) => (
-              <div key={idx} className="flex flex-col gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+            {fields.map((field, idx) => (
+              <div key={field.id} className="flex flex-col gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                   <div className="flex items-center gap-3 w-full sm:w-auto flex-1">
                     <span className="w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
-                      {step.stepOrder}
+                      {idx + 1}
                     </span>
-                    <input
-                      className="flex-1 p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-200 outline-none min-w-0"
-                      placeholder="Step Name (e.g., Manager Review)"
-                      value={step.stepName}
-                      onChange={e => updateStep(idx, 'stepName', e.target.value)}
-                    />
+                    <div className="flex-1">
+                      <input
+                        className={`w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-200 outline-none min-w-0 ${errors.steps?.[idx]?.stepName ? 'border-red-500' : 'border-gray-200'}`}
+                        placeholder="Step Name (e.g., Manager Review)"
+                        {...register(`steps.${idx}.stepName`)}
+                      />
+                    </div>
                   </div>
                   <div className="flex items-center gap-3 w-full sm:w-auto">
                     <select
-                      className="flex-1 p-2 border border-gray-200 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-200 outline-none"
-                      value={step.approverRoleId}
-                      onChange={e => updateStep(idx, 'approverRoleId', parseInt(e.target.value))}
+                      className={`flex-1 p-2 border rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-200 outline-none ${errors.steps?.[idx]?.approverRoleId ? 'border-red-500' : 'border-gray-200'}`}
+                      {...register(`steps.${idx}.approverRoleId`)}
                     >
                       {roles.map(r => <option key={r.roleId} value={r.roleId}>{r.roleName}</option>)}
                     </select>
-                    <button onClick={() => removeStep(idx)} className="text-red-400 hover:text-red-600 p-1 rounded transition-colors flex-shrink-0">
+                    <button type="button" onClick={() => removeStep(idx)} className="text-red-400 hover:text-red-600 p-1 rounded transition-colors flex-shrink-0">
                       <Trash2 size={17} />
                     </button>
                   </div>
                 </div>
+                
+                {errors.steps?.[idx]?.stepName && <p className="text-xs text-red-500 pl-10">{errors.steps[idx].stepName?.message}</p>}
 
                 <div className="flex flex-col sm:flex-row gap-3 sm:pl-10">
                   <input
                     className="flex-1 p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-200 outline-none min-w-0"
                     placeholder="Instructions for approver (optional)"
-                    value={step.description || ''}
-                    onChange={e => updateStep(idx, 'description', e.target.value)}
+                    {...register(`steps.${idx}.description`)}
                   />
                   <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                     <select
                       className="w-full sm:w-48 p-2 border border-gray-200 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-200 outline-none"
-                      value={step.onRejectAction}
-                      onChange={e => updateStep(idx, 'onRejectAction', e.target.value as OnRejectAction)}
+                      {...register(`steps.${idx}.onRejectAction`)}
                     >
                       <option value="Cancel">On Reject → Cancel task</option>
                       <option value="GoBack">On Reject → Go back 1 step</option>
@@ -270,8 +321,7 @@ const WorkflowBuilder: React.FC = () => {
                       placeholder="Esc. hrs"
                       title="Escalation hours (optional)"
                       min={1}
-                      value={step.escalationHours ?? ''}
-                      onChange={e => updateStep(idx, 'escalationHours', e.target.value ? parseInt(e.target.value) : undefined)}
+                      {...register(`steps.${idx}.escalationHours`)}
                     />
                   </div>
                 </div>
@@ -280,20 +330,17 @@ const WorkflowBuilder: React.FC = () => {
           </div>
         </div>
 
-        {formError && (
-          <p className="mt-3 text-sm text-red-500 bg-red-50 border border-red-200 px-4 py-2 rounded-lg">{formError}</p>
-        )}
-
         <div className="flex gap-3 mt-6">
           <button
-            onClick={handleSave}
-            disabled={saving}
+            type="button"
+            onClick={handleSubmit(onSubmit as any)}
+            disabled={isSubmitting}
             className="flex-1 bg-blue-600 text-white py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-blue-700 disabled:opacity-60 font-semibold transition-colors"
           >
-            {saving ? <><Save size={17} className="animate-pulse" /> Saving...</> : <><Save size={17} /> {editId ? 'Save Changes' : 'Create Workflow'}</>}
+            {isSubmitting ? <><Save size={17} className="animate-pulse" /> Saving...</> : <><Save size={17} /> {editId ? 'Save Changes' : 'Create Workflow'}</>}
           </button>
           {isEditing && (
-            <button onClick={resetForm} className="px-6 border border-gray-300 text-gray-600 py-3 rounded-xl hover:bg-gray-50 font-semibold transition-colors">
+            <button type="button" onClick={resetForm} className="px-6 border border-gray-300 text-gray-600 py-3 rounded-xl hover:bg-gray-50 font-semibold transition-colors">
               Cancel
             </button>
           )}
