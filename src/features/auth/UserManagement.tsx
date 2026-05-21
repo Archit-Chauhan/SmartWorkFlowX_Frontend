@@ -47,7 +47,7 @@ const UserManagement: React.FC = () => {
       await axiosInstance.post('/Admin/users', formData);
       setShowForm(false);
       setFormData({ name: '', email: '', password: '', roleId: 3 });
-      fetchUsers(); // Refresh the list
+      await fetchUsers(); // Refresh the list
       toast.success("User registered successfully!");
     } catch (err: any) {
       const message = err.response?.data?.message || "Error registering user.";
@@ -64,7 +64,7 @@ const UserManagement: React.FC = () => {
     setIsDeleting(true);
     try {
       await axiosInstance.delete(`/Admin/users/${deleteModal.userId}`);
-      fetchUsers(); // Fetch fresh paginated data
+      await fetchUsers(); // Fetch fresh paginated data
       toast.success("User deleted successfully.");
       setDeleteModal({ isOpen: false, userId: null, userName: '' });
     } catch (err: any) {
@@ -104,8 +104,9 @@ const UserManagement: React.FC = () => {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-blue-100 animate-in fade-in slide-in-from-top-4">
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
+              <label htmlFor="name-input" className="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
               <input 
+                id="name-input"
                 type="text" required
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
                 value={formData.name}
@@ -113,8 +114,9 @@ const UserManagement: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
+              <label htmlFor="email-input" className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
               <input 
+                id="email-input"
                 type="email" required
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
                 value={formData.email}
@@ -122,8 +124,9 @@ const UserManagement: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Temporary Password</label>
+              <label htmlFor="password-input" className="block text-xs font-bold text-gray-500 uppercase mb-1">Temporary Password</label>
               <input 
+                id="password-input"
                 type="text" required
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
                 value={formData.password}
@@ -131,8 +134,9 @@ const UserManagement: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">System Role</label>
+              <label htmlFor="role-select" className="block text-xs font-bold text-gray-500 uppercase mb-1">System Role</label>
               <select 
+                id="role-select"
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
                 value={formData.roleId}
                 onChange={(e) => setFormData({...formData, roleId: parseInt(e.target.value)})}
