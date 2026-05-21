@@ -30,11 +30,16 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    // If the backend returns 401, the token is likely expired or invalid
-    if (error.response && error.response.status === 401) {
+    // If the backend returns 401, the token is likely expired or invalid.
+    // We should NOT redirect if the request is part of the Auth flow or the user is already on the login page.
+    if (
+      error.response &&
+      error.response.status === 401 &&
+      !error.config?.url?.includes('/Auth/') &&
+      window.location.pathname !== '/login'
+    ) {
       console.error('Unauthorized! Redirecting to login...');
       localStorage.removeItem('token');
-      // You could trigger a redirect to /login here if needed
       window.location.href = '/login';
     }
     return Promise.reject(error);
