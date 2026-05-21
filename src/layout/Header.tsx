@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Bell, CheckCheck, Menu } from 'lucide-react';
+import { LogOut, Bell, CheckCheck, Menu, KeyRound } from 'lucide-react';
 import { useNotificationHub } from '../hooks/useNotificationHub';
 import axiosInstance from '../api/axiosInstance';
 import type { Notification, NotificationPaginatedResponse } from '../models';
+import ChangePasswordModal from '../components/ChangePasswordModal';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -15,6 +16,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
 
   const [showBell, setShowBell] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [showChangePassword, setShowChangePassword] = useState(false);
   const bellRef = useRef<HTMLDivElement>(null);
 
   // Load notifications when bell opens
@@ -119,6 +121,17 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
         <div className="h-6 w-px bg-gray-200 hidden sm:block" />
 
         <button
+          onClick={() => setShowChangePassword(true)}
+          className="flex items-center gap-2 text-gray-500 hover:text-blue-600 transition-colors"
+          title="Change Password"
+        >
+          <KeyRound size={20} />
+          <span className="text-sm font-medium hidden sm:inline">Change Password</span>
+        </button>
+
+        <div className="h-6 w-px bg-gray-200 hidden sm:block" />
+
+        <button
           onClick={logout}
           className="flex items-center gap-2 text-gray-500 hover:text-red-600 transition-colors"
           title="Logout"
@@ -127,6 +140,10 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           <span className="text-sm font-medium hidden sm:inline">Logout</span>
         </button>
       </div>
+
+      {showChangePassword && (
+        <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
+      )}
     </header>
   );
 };
