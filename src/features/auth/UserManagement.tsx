@@ -47,7 +47,7 @@ const UserManagement: React.FC = () => {
       await axiosInstance.post('/Admin/users', formData);
       setShowForm(false);
       setFormData({ name: '', email: '', password: '', roleId: 3 });
-      fetchUsers(); // Refresh the list
+      await fetchUsers(); // Refresh the list
       toast.success("User registered successfully!");
     } catch (err: any) {
       const message = err.response?.data?.message || "Error registering user.";
@@ -64,7 +64,7 @@ const UserManagement: React.FC = () => {
     setIsDeleting(true);
     try {
       await axiosInstance.delete(`/Admin/users/${deleteModal.userId}`);
-      fetchUsers(); // Fetch fresh paginated data
+      await fetchUsers(); // Fetch fresh paginated data
       toast.success("User deleted successfully.");
       setDeleteModal({ isOpen: false, userId: null, userName: '' });
     } catch (err: any) {
