@@ -18,6 +18,7 @@ const App: React.FC = () => {
         pauseOnFocusLoss 
         draggable 
         pauseOnHover 
+        theme="light"
       />
     </BrowserRouter>
   );
