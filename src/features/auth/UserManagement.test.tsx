@@ -97,9 +97,6 @@ describe('UserManagement Component', () => {
 
   it('asks for confirmation and deletes user successfully', async () => {
     vi.mocked(axiosInstance.delete).mockResolvedValue({});
-    
-    // Mock window.confirm
-    const confirmSpy = vi.spyOn(window, 'confirm').mockImplementation(() => true);
 
     render(<UserManagement />);
 
@@ -107,19 +104,22 @@ describe('UserManagement Component', () => {
       expect(screen.queryByText('Loading users...')).not.toBeInTheDocument();
     });
 
-    // Find the delete button for Alice Smith
+    // Click the delete button for Alice Smith
     const deleteButtons = screen.getAllByTitle('Delete User');
     expect(deleteButtons).toHaveLength(2);
-    
-    fireEvent.click(deleteButtons[0]); // Click Alice's delete button
+    fireEvent.click(deleteButtons[0]);
 
-    expect(confirmSpy).toHaveBeenCalledWith('Are you sure you want to delete Alice Smith? This action cannot be undone.');
-    
+    // ConfirmationModal should appear with the correct message
+    expect(screen.getByText('Are you sure you want to delete Alice Smith? This action cannot be undone.')).toBeInTheDocument();
+
+    // Click the "Delete" confirm button inside the modal
+    const modalConfirmBtn = screen.getByRole('button', { name: /^delete$/i });
+    fireEvent.click(modalConfirmBtn);
+
     await waitFor(() => {
       expect(axiosInstance.delete).toHaveBeenCalledWith('/Admin/users/1');
     });
 
     expect(toast.success).toHaveBeenCalledWith('User deleted successfully.');
-    confirmSpy.mockRestore();
   });
 });
