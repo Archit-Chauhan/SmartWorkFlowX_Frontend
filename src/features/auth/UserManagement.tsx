@@ -4,7 +4,6 @@ import type { User, UserRole, PaginatedResponse } from '../../models';
 import { UserPlus, User as UserIcon, CheckCircle, Trash2 } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Pagination from '../../components/Pagination';
-import { toast } from 'react-toastify';
 import ConfirmationModal from '../../components/ConfirmationModal';
 
 const UserManagement: React.FC = () => {
