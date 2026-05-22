@@ -56,7 +56,7 @@ const TaskAssign: React.FC = () => {
     if (!raw) return;
     setFormalizing(true);
     try {
-      const res = await axiosInstance.post<{ formalizedText: string }>('/Task/formalize-description', { rawText: raw });
+      const res = await axiosInstance.post<{ formalizedText: string }>('/Task/formalize-description', { rawText: raw, context: 'task' });
       setValue('description', res.data.formalizedText);
     } catch {
       // silently fail — user keeps their original text
