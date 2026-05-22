@@ -1,6 +1,12 @@
 export type TaskStatus = 'Pending' | 'In Progress' | 'Completed' | 'Cancelled' | 'Rejected';
 export type TaskPriority = 'Low' | 'Medium' | 'High';
 
+export interface TaskCategory {
+  categoryId: number;
+  name: string;
+  colorHex: string;
+}
+
 export interface TaskItem {
   taskId: number;
   title: string;
@@ -16,6 +22,9 @@ export interface TaskItem {
   dueDate?: string;
   completedAt?: string;
   createdAt: string;
+  categoryId?: number;
+  categoryName?: string;
+  categoryColor?: string;
 }
 
 export interface TaskCreateRequest {
@@ -25,6 +34,7 @@ export interface TaskCreateRequest {
   assignedTo: number;
   priority: TaskPriority;
   dueDate?: string;
+  categoryId?: number;
 }
 
 export interface TaskRejectRequest {

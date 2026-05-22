@@ -146,6 +146,16 @@ const TaskList: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 flex-shrink-0">
+          {/* Category badge */}
+          {task.categoryName && (
+            <span
+              className="text-xs font-semibold px-2 py-1 rounded-full"
+              style={{ backgroundColor: `${task.categoryColor}22`, color: task.categoryColor, border: `1px solid ${task.categoryColor}44` }}
+            >
+              {task.categoryName}
+            </span>
+          )}
+
           {/* Priority badge */}
           <span className={`text-xs font-bold px-2 py-1 rounded-full border ${PRIORITY_STYLES[task.priority]}`}>
             {task.priority}
