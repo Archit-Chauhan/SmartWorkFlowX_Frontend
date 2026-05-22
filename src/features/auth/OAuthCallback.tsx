@@ -2,12 +2,24 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, AlertCircle } from 'lucide-react';
 
+const ERROR_MESSAGES: Record<string, string> = {
+  not_registered: "This Google account is not registered in the system. Please contact your administrator to get access.",
+  deactivated: "Your account has been deactivated. Please contact your administrator.",
+  auth_failed: "Google authentication failed. Please try again.",
+};
+
 const OAuthCallback: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const errorParam = searchParams.get('error');
+    if (errorParam) {
+      setError(ERROR_MESSAGES[errorParam] ?? "Authentication failed. Please try again.");
+      return;
+    }
+
     const token = searchParams.get('token');
     const email = searchParams.get('email');
     const role = searchParams.get('role');
@@ -17,7 +29,7 @@ const OAuthCallback: React.FC = () => {
       localStorage.setItem('token', token);
       localStorage.setItem('email', email);
       localStorage.setItem('role', role);
-      
+
       // Full page reload to allow AuthContext to mount with the new state
       setTimeout(() => {
         window.location.href = '/';
