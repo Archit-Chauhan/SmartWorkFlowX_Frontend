@@ -42,12 +42,28 @@ const Dashboard: React.FC = () => {
     { label: 'Overdue Tasks',     value: stats?.overdueTasks ?? 0,     icon: <AlertTriangle size={20} className="text-red-500" />, color: 'bg-red-50',  border: 'border-red-100' },
   ];
 
+  const totalTasks = (stats?.pendingTasks ?? 0) + (stats?.inProgressTasks ?? 0) + (stats?.completedTasks ?? 0);
+  const completionRate = totalTasks > 0 ? Math.round(((stats?.completedTasks ?? 0) / totalTasks) * 100) : 0;
+
   return (
     <div className="space-y-8">
       <div>
         <h2 className="text-2xl font-bold text-gray-800">System Overview</h2>
         <p className="text-gray-500 mt-1">Welcome back! Here's what's happening in SmartWorkFlowX today.</p>
       </div>
+
+      {/* Overdue Alert Banner */}
+      {(stats?.overdueTasks ?? 0) > 0 && (
+        <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-5 py-4">
+          <AlertTriangle size={20} className="text-red-500 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-semibold text-red-700">
+              {stats!.overdueTasks} task{stats!.overdueTasks > 1 ? 's are' : ' is'} overdue
+            </p>
+            <p className="text-xs text-red-500 mt-0.5">These tasks have passed their due date and are still in progress.</p>
+          </div>
+        </div>
+      )}
 
       {/* Primary Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
@@ -63,6 +79,41 @@ const Dashboard: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* Task Status Distribution */}
+      {totalTasks > 0 && (
+        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-gray-800">Task Distribution</h3>
+            <span className="text-sm font-bold text-gray-900">{completionRate}% complete</span>
+          </div>
+          <div className="flex h-3 rounded-full overflow-hidden gap-px">
+            {(stats?.completedTasks ?? 0) > 0 && (
+              <div className="bg-green-500 transition-all" style={{ width: `${Math.round(((stats?.completedTasks ?? 0) / totalTasks) * 100)}%` }} />
+            )}
+            {(stats?.inProgressTasks ?? 0) > 0 && (
+              <div className="bg-blue-500 transition-all" style={{ width: `${Math.round(((stats?.inProgressTasks ?? 0) / totalTasks) * 100)}%` }} />
+            )}
+            {(stats?.pendingTasks ?? 0) > 0 && (
+              <div className="bg-yellow-400 transition-all" style={{ width: `${Math.round(((stats?.pendingTasks ?? 0) / totalTasks) * 100)}%` }} />
+            )}
+          </div>
+          <div className="flex flex-wrap gap-4 mt-3">
+            <span className="flex items-center gap-1.5 text-xs text-gray-500">
+              <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block" />
+              Completed ({stats?.completedTasks ?? 0})
+            </span>
+            <span className="flex items-center gap-1.5 text-xs text-gray-500">
+              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" />
+              In Progress ({stats?.inProgressTasks ?? 0})
+            </span>
+            <span className="flex items-center gap-1.5 text-xs text-gray-500">
+              <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 inline-block" />
+              Pending ({stats?.pendingTasks ?? 0})
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Avg Completion Time + Overdue Alert */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

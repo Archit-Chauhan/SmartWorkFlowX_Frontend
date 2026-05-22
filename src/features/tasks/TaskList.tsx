@@ -120,9 +120,10 @@ const TaskList: React.FC = () => {
   };
 
   const isActive = (t: TaskItem) => t.status !== 'Completed' && t.status !== 'Cancelled';
+  const isOverdue = (t: TaskItem) => !!t.dueDate && new Date(t.dueDate) < new Date() && isActive(t);
 
   const renderTaskCard = (task: TaskItem, showActions: boolean) => (
-    <div key={task.taskId} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <div key={task.taskId} className={`bg-white rounded-xl border shadow-sm overflow-hidden ${isOverdue(task) ? 'border-red-300' : 'border-gray-200'}`}>
       {/* Main Row */}
       <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
         <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
@@ -135,7 +136,9 @@ const TaskList: React.FC = () => {
             <p className="text-xs text-gray-400 mt-0.5">
               Step {task.currentStepOrder} ·{' '}
               {task.workflowTitle || 'Workflow'} ·{' '}
-              {task.dueDate ? `Due ${new Date(task.dueDate).toLocaleDateString()}` : 'No due date'}
+              <span className={task.dueDate && isOverdue(task) ? 'text-red-500 font-semibold' : ''}>
+                {task.dueDate ? `Due ${new Date(task.dueDate).toLocaleDateString()}` : 'No due date'}
+              </span>
             </p>
             {task.description && (
               <p className="text-xs text-gray-500 mt-1 line-clamp-2">{task.description}</p>
@@ -149,6 +152,13 @@ const TaskList: React.FC = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-3 flex-shrink-0">
+          {/* Overdue badge */}
+          {isOverdue(task) && (
+            <span className="text-xs font-bold px-2 py-1 rounded-full bg-red-100 text-red-600 border border-red-200 uppercase tracking-wide">
+              Overdue
+            </span>
+          )}
+
           {/* Category badge */}
           {task.categoryName && (
             <span
