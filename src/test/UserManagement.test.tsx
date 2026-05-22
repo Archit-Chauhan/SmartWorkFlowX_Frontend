@@ -96,19 +96,19 @@ describe('UserManagement Component', () => {
       expect(screen.queryByText('Loading users...')).not.toBeInTheDocument();
     });
 
-    const deleteButtons = screen.getAllByTitle('Delete User');
+    const deleteButtons = screen.getAllByTitle('Deactivate User');
     expect(deleteButtons).toHaveLength(2);
     fireEvent.click(deleteButtons[0]);
 
-    expect(screen.getByText('Are you sure you want to delete Alice Smith? This action cannot be undone.')).toBeInTheDocument();
+    expect(screen.getByText("Are you sure you want to deactivate Alice Smith? They will not be able to log in until restored.")).toBeInTheDocument();
 
-    const modalConfirmBtn = screen.getByRole('button', { name: /^delete$/i });
+    const modalConfirmBtn = screen.getByRole('button', { name: /^deactivate$/i });
     fireEvent.click(modalConfirmBtn);
 
     await waitFor(() => {
       expect(axiosInstance.delete).toHaveBeenCalledWith('/Admin/users/1');
     });
 
-    expect(toast.success).toHaveBeenCalledWith('User deleted successfully.');
+    expect(toast.success).toHaveBeenCalledWith('User deactivated successfully.');
   });
 });

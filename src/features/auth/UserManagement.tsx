@@ -167,32 +167,32 @@ const UserManagement: React.FC = () => {
         <div className="bg-white p-6 rounded-xl shadow-sm border border-blue-100">
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
-              <input type="text" required
+              <label htmlFor="reg-name" className="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
+              <input id="reg-name" type="text" required
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
                 value={formData.name}
                 onChange={e => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
-              <input type="email" required
+              <label htmlFor="reg-email" className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
+              <input id="reg-email" type="email" required
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
                 value={formData.email}
                 onChange={e => setFormData({ ...formData, email: e.target.value })}
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Temporary Password</label>
-              <input type="text" required
+              <label htmlFor="reg-password" className="block text-xs font-bold text-gray-500 uppercase mb-1">Temporary Password</label>
+              <input id="reg-password" type="text" required
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
                 value={formData.password}
                 onChange={e => setFormData({ ...formData, password: e.target.value })}
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-1">System Role</label>
-              <select
+              <label htmlFor="reg-role" className="block text-xs font-bold text-gray-500 uppercase mb-1">System Role</label>
+              <select id="reg-role"
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
                 value={formData.roleId}
                 onChange={e => setFormData({ ...formData, roleId: parseInt(e.target.value) })}
