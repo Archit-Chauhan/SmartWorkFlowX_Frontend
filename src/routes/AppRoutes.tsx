@@ -14,6 +14,7 @@ import TaskAssign from '../features/tasks/TaskAssign';
 import WorkflowBuilder from '../features/workflows/WorkflowBuilder';
 import UserManagement from '../features/auth/UserManagement';
 import AuditLog from '../features/reports/AuditLog';
+import AllTasks from '../features/tasks/AllTasks';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -39,6 +40,11 @@ const AppRoutes: React.FC = () => {
       <Route path="/" element={<PrivateRoute><MainLayout /></PrivateRoute>}>
         <Route index element={<Dashboard />} />
         <Route path="tasks" element={<TaskList />} />
+        <Route path="all-tasks" element={
+          <RoleRoute roles={['Admin', 'Manager']}>
+            <AllTasks />
+          </RoleRoute>
+        } />
         <Route path="assign" element={
           <RoleRoute roles={['Admin', 'Manager']}>
             <TaskAssign />

@@ -8,7 +8,8 @@ import {
   Users,
   History,
   Send,
-  X
+  X,
+  ListFilter
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -32,6 +33,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       label: 'My Tasks',
       icon: <ClipboardList size={20} />,
       roles: ['Admin', 'Manager', 'Employee'],
+    },
+    {
+      to: '/all-tasks',
+      label: 'All Tasks',
+      icon: <ListFilter size={20} />,
+      roles: ['Admin', 'Manager'],
     },
     {
       to: '/assign',
