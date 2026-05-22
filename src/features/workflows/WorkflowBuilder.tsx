@@ -6,7 +6,7 @@ import type {
 } from '../../models';
 import {
   GitPullRequest, Plus, Trash2, Save, Eye, Edit2,
-  Copy, Power, PowerOff, ChevronUp, AlertCircle
+  Copy, Power, PowerOff, ChevronUp, AlertCircle, Sparkles
 } from 'lucide-react';
 import Pagination from '../../components/Pagination';
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -60,6 +60,7 @@ const WorkflowBuilder: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [formError, setFormError] = useState('');
+  const [formalizing, setFormalizing] = useState(false);
 
   // Detail view
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -81,6 +82,20 @@ const WorkflowBuilder: React.FC = () => {
   });
 
   const statusValue = watch('status');
+
+  const handleFormalizeDescription = async () => {
+    const raw = watch('description')?.trim();
+    if (!raw) return;
+    setFormalizing(true);
+    try {
+      const res = await axiosInstance.post<{ formalizedText: string }>('/Task/formalize-description', { rawText: raw });
+      setValue('description', res.data.formalizedText);
+    } catch {
+      // silently keep original text
+    } finally {
+      setFormalizing(false);
+    }
+  };
 
   const fetchAll = async () => {
     setLoading(true);
@@ -235,12 +250,26 @@ const WorkflowBuilder: React.FC = () => {
             {errors.title && <p className="mt-1 text-sm text-red-500">{errors.title.message}</p>}
           </div>
 
-          <textarea
-            className="p-3 border border-gray-200 rounded-lg w-full resize-none focus:ring-2 focus:ring-blue-200 outline-none"
-            rows={2}
-            placeholder="Description..."
-            {...register('description')}
-          />
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-sm font-medium text-gray-600">Description</label>
+              <button
+                type="button"
+                onClick={handleFormalizeDescription}
+                disabled={formalizing || !watch('description')?.trim()}
+                className="flex items-center gap-1.5 text-xs font-semibold text-purple-600 hover:text-purple-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                <Sparkles size={13} className={formalizing ? 'animate-pulse' : ''} />
+                {formalizing ? 'Formalizing...' : 'Formalize with AI'}
+              </button>
+            </div>
+            <textarea
+              className="p-3 border border-gray-200 rounded-lg w-full resize-none focus:ring-2 focus:ring-blue-200 outline-none"
+              rows={2}
+              placeholder="Type rough notes, then click 'Formalize with AI'..."
+              {...register('description')}
+            />
+          </div>
 
           {editId && (
             <div className="flex items-center gap-3">
