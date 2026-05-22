@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../../api/axiosInstance';
 import type { Workflow, TaskCreateRequest, TaskPriority, PaginatedResponse, TaskCategory } from '../../models';
-import { Send, ClipboardList } from 'lucide-react';
+import { Send, ClipboardList, Sparkles } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -25,6 +25,7 @@ const TaskAssign: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [categories, setCategories] = useState<TaskCategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [formalizing, setFormalizing] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const {
@@ -48,6 +49,21 @@ const TaskAssign: React.FC = () => {
   });
 
   const priorityValue = watch('priority');
+  const descriptionValue = watch('description');
+
+  const handleFormalize = async () => {
+    const raw = descriptionValue?.trim();
+    if (!raw) return;
+    setFormalizing(true);
+    try {
+      const res = await axiosInstance.post<{ formalizedText: string }>('/Task/formalize-description', { rawText: raw });
+      setValue('description', res.data.formalizedText);
+    } catch {
+      // silently fail — user keeps their original text
+    } finally {
+      setFormalizing(false);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -121,11 +137,22 @@ const TaskAssign: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <button
+                type="button"
+                onClick={handleFormalize}
+                disabled={formalizing || !descriptionValue?.trim()}
+                className="flex items-center gap-1.5 text-xs font-semibold text-purple-600 hover:text-purple-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                <Sparkles size={13} className={formalizing ? 'animate-pulse' : ''} />
+                {formalizing ? 'Formalizing...' : 'Formalize with AI'}
+              </button>
+            </div>
             <textarea
               className="w-full border border-gray-200 rounded-lg p-3 text-sm resize-none focus:ring-2 focus:ring-blue-200 outline-none"
               rows={3}
-              placeholder="Any additional context for the assignee..."
+              placeholder="Type rough notes, then click 'Formalize with AI'..."
               {...register('description')}
             />
           </div>
