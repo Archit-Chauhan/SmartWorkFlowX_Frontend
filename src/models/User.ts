@@ -6,6 +6,9 @@ export interface User {
   email: string;
   roleId: number;
   role?: Role;
+  isDeleted: boolean;
+  deletedAt?: string;
+  createdAt?: string;
 }
 
 export interface Role {
