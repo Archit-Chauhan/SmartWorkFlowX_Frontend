@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import * as signalR from '@microsoft/signalr';
+import axiosInstance from '../api/axiosInstance';
 import type { Notification } from '../models';
 
 const HUB_URL = import.meta.env.VITE_HUB_URL || 'https://localhost:52082/hubs/notifications';
@@ -8,6 +9,13 @@ export const useNotificationHub = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const connectionRef = useRef<signalR.HubConnection | null>(null);
+
+  // Fetch persisted unread count on mount so the badge is correct after page refresh
+  useEffect(() => {
+    axiosInstance.get<{ unreadCount: number }>('/Notification/unread-count')
+      .then(r => setUnreadCount(r.data.unreadCount))
+      .catch(() => {});
+  }, []);
 
   const connect = useCallback(() => {
     const token = localStorage.getItem('token');
