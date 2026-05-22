@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../../api/axiosInstance';
-import { History, ShieldCheck, User, Calendar, Activity } from 'lucide-react';
+import { History, ShieldCheck, User, Calendar, Activity, Download, Search } from 'lucide-react';
 import Pagination from '../../components/Pagination';
 import type { PaginatedResponse } from '../../models';
+import { toast } from 'react-toastify';
 
 interface AuditEntry {
   userName: string;
@@ -14,15 +15,29 @@ interface AuditEntry {
 const AuditLog: React.FC = () => {
   const [logs, setLogs] = useState<AuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
-  
+  const [exporting, setExporting] = useState(false);
+
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const limit = 10;
 
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchInput);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      const response = await axiosInstance.get<PaginatedResponse<AuditEntry>>(`/Report/audit-logs?page=${page}&pageSize=${limit}`);
+      const params = new URLSearchParams({ page: String(page), pageSize: String(limit) });
+      if (search) params.set('search', search);
+      const response = await axiosInstance.get<PaginatedResponse<AuditEntry>>(`/Report/audit-logs?${params}`);
       setLogs(response.data.data);
       setTotal(response.data.total);
     } catch (err) {
@@ -32,7 +47,28 @@ const AuditLog: React.FC = () => {
     }
   };
 
-  useEffect(() => { fetchLogs(); }, [page]);
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams();
+      if (search) params.set('search', search);
+      const response = await axiosInstance.get(`/Report/audit-logs/export?${params}`, { responseType: 'blob' });
+      const href = window.URL.createObjectURL(new Blob([response.data]));
+      const a = document.createElement('a');
+      a.href = href;
+      a.download = 'audit-logs.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(href);
+    } catch {
+      toast.error('Failed to export audit logs.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  useEffect(() => { fetchLogs(); }, [page, search]);
 
   const totalPages = Math.ceil(total / limit);
 
@@ -45,9 +81,29 @@ const AuditLog: React.FC = () => {
           </h2>
           <p className="text-sm text-gray-500 text-left">Immutable record of all system modifications and access</p>
         </div>
-        <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg border border-blue-100 flex items-center gap-2 text-sm font-medium">
-          <ShieldCheck size={18} />
-          Compliance Active
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="relative">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search logs..."
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+              className="pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none w-52"
+            />
+          </div>
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all text-sm font-medium disabled:opacity-50"
+          >
+            <Download size={16} />
+            {exporting ? 'Exporting...' : 'Export CSV'}
+          </button>
+          <div className="bg-blue-50 text-blue-700 px-4 py-2 rounded-lg border border-blue-100 flex items-center gap-2 text-sm font-medium">
+            <ShieldCheck size={18} />
+            Compliance Active
+          </div>
         </div>
       </div>
 

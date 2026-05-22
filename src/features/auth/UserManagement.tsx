@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../../api/axiosInstance';
 import type { User, UserRole, PaginatedResponse } from '../../models';
-import { UserPlus, User as UserIcon, CheckCircle, Trash2 } from 'lucide-react';
+import { UserPlus, User as UserIcon, CheckCircle, Trash2, Search, Download } from 'lucide-react';
 import { toast } from 'react-toastify';
 import Pagination from '../../components/Pagination';
 import ConfirmationModal from '../../components/ConfirmationModal';
@@ -18,6 +18,19 @@ const UserManagement: React.FC = () => {
   const [total, setTotal] = useState(0);
   const limit = 10;
 
+  // Search State
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+  const [exporting, setExporting] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(searchInput);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
   // Form State
   const [formData, setFormData] = useState({
     name: '',
@@ -29,7 +42,9 @@ const UserManagement: React.FC = () => {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const response = await axiosInstance.get<PaginatedResponse<User>>(`/Admin/users?page=${page}&limit=${limit}`);
+      const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+      if (search) params.set('search', search);
+      const response = await axiosInstance.get<PaginatedResponse<User>>(`/Admin/users?${params}`);
       setUsers(response.data.data);
       setTotal(response.data.total);
     } catch (err) {
@@ -39,7 +54,28 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  useEffect(() => { fetchUsers(); }, [page]);
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const params = new URLSearchParams();
+      if (search) params.set('search', search);
+      const response = await axiosInstance.get(`/Admin/users/export?${params}`, { responseType: 'blob' });
+      const href = window.URL.createObjectURL(new Blob([response.data]));
+      const a = document.createElement('a');
+      a.href = href;
+      a.download = 'users.csv';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(href);
+    } catch {
+      toast.error('Failed to export users.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  useEffect(() => { fetchUsers(); }, [page, search]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,13 +127,33 @@ const UserManagement: React.FC = () => {
           <h2 className="text-2xl font-bold text-gray-800">User Management</h2>
           <p className="text-sm text-gray-500">Create and manage system stakeholders</p>
         </div>
-        <button 
-          onClick={() => setShowForm(!showForm)}
-          className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
-        >
-          <UserPlus size={18} />
-          {showForm ? 'Close Form' : 'Register New User'}
-        </button>
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="relative">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search users..."
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+              className="pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none w-48"
+            />
+          </div>
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all shadow-sm text-sm disabled:opacity-50"
+          >
+            <Download size={16} />
+            {exporting ? 'Exporting...' : 'Export CSV'}
+          </button>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+          >
+            <UserPlus size={18} />
+            {showForm ? 'Close Form' : 'Register New User'}
+          </button>
+        </div>
       </div>
 
       {showForm && (
