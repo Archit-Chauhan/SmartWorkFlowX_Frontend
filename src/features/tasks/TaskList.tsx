@@ -137,6 +137,9 @@ const TaskList: React.FC = () => {
               {task.workflowTitle || 'Workflow'} ·{' '}
               {task.dueDate ? `Due ${new Date(task.dueDate).toLocaleDateString()}` : 'No due date'}
             </p>
+            {task.description && (
+              <p className="text-xs text-gray-500 mt-1 line-clamp-2">{task.description}</p>
+            )}
             {task.rejectedReason && (
               <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
                 <RotateCcw size={10} /> Sent back: {task.rejectedReason}
