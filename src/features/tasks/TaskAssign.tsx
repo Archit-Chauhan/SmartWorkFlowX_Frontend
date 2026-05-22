@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../../api/axiosInstance';
-import type { Workflow, TaskCreateRequest, TaskPriority, PaginatedResponse } from '../../models';
+import type { Workflow, TaskCreateRequest, TaskPriority, PaginatedResponse, TaskCategory } from '../../models';
 import { Send, ClipboardList } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,7 +14,8 @@ const taskAssignSchema = z.object({
   workflowId: z.coerce.number().min(1, 'Please select a workflow'),
   assignedTo: z.coerce.number().min(1, 'Please select a user'),
   priority: z.enum(['Low', 'Medium', 'High']),
-  dueDate: z.string().optional()
+  dueDate: z.string().optional(),
+  categoryId: z.coerce.number().optional()
 });
 
 type TaskAssignFormValues = z.infer<typeof taskAssignSchema>;
@@ -22,6 +23,7 @@ type TaskAssignFormValues = z.infer<typeof taskAssignSchema>;
 const TaskAssign: React.FC = () => {
   const [workflows, setWorkflows] = useState<Workflow[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [categories, setCategories] = useState<TaskCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -40,7 +42,8 @@ const TaskAssign: React.FC = () => {
       priority: 'Medium',
       title: '',
       description: '',
-      dueDate: ''
+      dueDate: '',
+      categoryId: undefined
     }
   });
 
@@ -49,12 +52,14 @@ const TaskAssign: React.FC = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const [wf, u] = await Promise.all([
+        const [wf, u, cats] = await Promise.all([
           axiosInstance.get<PaginatedResponse<Workflow>>('/Workflow?page=1&limit=1000'),
           axiosInstance.get<PaginatedResponse<User>>('/Admin/users?page=1&limit=1000'),
+          axiosInstance.get<TaskCategory[]>('/Task/categories'),
         ]);
         setWorkflows(wf.data.data.filter(w => w.status === 'Active'));
         setUsers(u.data.data);
+        setCategories(cats.data);
       } catch (err) {
         console.error("Failed to load data", err);
       } finally {
@@ -68,12 +73,13 @@ const TaskAssign: React.FC = () => {
     setMessage(null);
     try {
       const body: TaskCreateRequest = {
-        title: data.title, 
-        description: data.description || '', 
-        workflowId: data.workflowId, 
+        title: data.title,
+        description: data.description || '',
+        workflowId: data.workflowId,
         assignedTo: data.assignedTo,
-        priority: data.priority, 
+        priority: data.priority,
         dueDate: data.dueDate || undefined,
+        categoryId: data.categoryId || undefined,
       };
       await axiosInstance.post('/Task/assign', body);
       setMessage({ type: 'success', text: `Task "${data.title}" assigned successfully!` });
@@ -83,7 +89,8 @@ const TaskAssign: React.FC = () => {
         priority: 'Medium',
         title: '',
         description: '',
-        dueDate: ''
+        dueDate: '',
+        categoryId: undefined
       });
     } catch (err: any) {
       setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to assign task.' });
@@ -149,6 +156,36 @@ const TaskAssign: React.FC = () => {
                 {users.map(u => <option key={u.userId} value={u.userId}>{u.name} — {u.roleName}</option>)}
               </select>
               {errors.assignedTo && <p className="mt-1 text-sm text-red-500">{errors.assignedTo.message}</p>}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Category (optional)</label>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setValue('categoryId', undefined)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                  !watch('categoryId') ? 'bg-gray-700 text-white border-gray-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                }`}
+              >
+                None
+              </button>
+              {categories.map(c => (
+                <button
+                  key={c.categoryId}
+                  type="button"
+                  onClick={() => setValue('categoryId', c.categoryId)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all`}
+                  style={
+                    watch('categoryId') === c.categoryId
+                      ? { backgroundColor: c.colorHex, color: '#fff', borderColor: c.colorHex }
+                      : { borderColor: c.colorHex, color: c.colorHex }
+                  }
+                >
+                  {c.name}
+                </button>
+              ))}
             </div>
           </div>
 
