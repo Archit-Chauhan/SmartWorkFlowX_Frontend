@@ -68,14 +68,14 @@ const TaskAssign: React.FC = () => {
   useEffect(() => {
     const load = async () => {
       try {
-        const [wf, u, cats] = await Promise.all([
+        const [wf, u, cats] = await Promise.allSettled([
           axiosInstance.get<PaginatedResponse<Workflow>>('/Workflow?page=1&limit=1000'),
-          axiosInstance.get<PaginatedResponse<User>>('/Admin/users?page=1&limit=1000'),
+          axiosInstance.get<User[]>('/Task/assignable-users'),
           axiosInstance.get<TaskCategory[]>('/Task/categories'),
         ]);
-        setWorkflows(wf.data.data.filter(w => w.status === 'Active'));
-        setUsers(u.data.data);
-        setCategories(cats.data);
+        if (wf.status === 'fulfilled') setWorkflows(wf.value.data.data.filter(w => w.status === 'Active'));
+        if (u.status === 'fulfilled') setUsers(u.value.data);
+        if (cats.status === 'fulfilled') setCategories(cats.value.data);
       } catch (err) {
         console.error("Failed to load data", err);
       } finally {
