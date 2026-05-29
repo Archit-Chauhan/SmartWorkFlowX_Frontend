@@ -100,13 +100,17 @@ const WorkflowBuilder: React.FC = () => {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [wf, r] = await Promise.all([
+      const [wfResult, rolesResult] = await Promise.allSettled([
         axiosInstance.get<PaginatedResponse<Workflow>>(`/Workflow?page=${page}&limit=${limit}`),
         axiosInstance.get<Role[]>('/Admin/roles'),
       ]);
-      setWorkflows(wf.data.data);
-      setTotal(wf.data.total);
-      setRoles(r.data);
+      if (wfResult.status === 'fulfilled') {
+        setWorkflows(wfResult.value.data.data);
+        setTotal(wfResult.value.data.total);
+      }
+      if (rolesResult.status === 'fulfilled') {
+        setRoles(rolesResult.value.data);
+      }
     } finally {
       setLoading(false);
     }
