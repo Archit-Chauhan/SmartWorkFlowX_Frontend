@@ -4,7 +4,7 @@ import type { TaskItem } from '../../models';
 import { useDialogA11y } from '../../hooks/useDialogA11y';
 import { actionVerb, nextStepText, REJECT_REASONS, stepLabel } from './taskUtils';
 
-interface ShellProps {
+export interface ShellProps {
   tone: 'accent' | 'danger';
   /** Overrides the default icon for the tone. */
   icon?: React.ReactNode;
