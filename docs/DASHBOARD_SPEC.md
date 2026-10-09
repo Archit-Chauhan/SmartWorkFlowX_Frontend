@@ -35,6 +35,9 @@ Rules:
 
 ## Definitions (all computed over tasks that match the filters)
 - **Range**: `from` 00:00 to `to` 23:59:59.999. **Previous period**: the same number of days directly before `from`.
+- **Owner** of a task (used by the assignee filter, workload and names): the current assignee, or the original employee once the task has left them (an approval step, or finished). A task waiting in an approval pool therefore counts toward the employee who owns the work.
+- **Names**: other people's names (workload, the assignee on Most overdue, the Assignee column in the CSV) are only sent with the `workload` permission. An Employee never receives them.
+- **Validation**: `status` and `priority` must be known values and the dates must be yyyy-MM-dd within 366 days, otherwise the API answers 400. Unknown filter text is never stored in the audit log.
 - **Created**: tasks with `createdAt` inside the range.
 - **Completed**: tasks with `completedAt` inside the range.
 - **Open** (at the end of the range): created on or before `to` and not completed/cancelled by then. A task counts as completed by `to` when `completedAt <= to`; there is no cancellation date, so Cancelled and Rejected tasks are always excluded.
