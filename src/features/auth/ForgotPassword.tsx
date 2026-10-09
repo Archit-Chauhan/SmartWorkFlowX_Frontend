@@ -1,7 +1,9 @@
 import React, { useState, useRef } from 'react';
+import ThemeToggle from '../../components/ThemeToggle';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import { Mail, AlertCircle, CheckCircle2, ArrowLeft, Loader2 } from 'lucide-react';
+import { useTheme } from '../../hooks/useTheme';
 import { Turnstile } from '@marsidev/react-turnstile';
 import type { TurnstileInstance } from '@marsidev/react-turnstile';
 import { useForm } from 'react-hook-form';
@@ -20,6 +22,7 @@ const ForgotPassword: React.FC = () => {
   const [status, setStatus] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const turnstileRef = useRef<TurnstileInstance>(null);
+  const { theme } = useTheme();
   const navigate = useNavigate();
 
   const {
@@ -61,33 +64,34 @@ const ForgotPassword: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg border border-gray-100">
+    <div className="min-h-screen flex items-center justify-center relative bg-surface-1 py-12 px-4">
+      <div className="absolute top-4 right-4"><ThemeToggle /></div>
+      <div className="w-full max-w-[400px] space-y-6 card card-pad">
         <div>
           <button 
             type="button"
             onClick={() => navigate('/login')}
-            className="flex items-center text-sm font-medium text-gray-500 hover:text-gray-700 transition-colors mb-6"
+            className="flex items-center text-sm font-medium text-ink-muted hover:text-ink transition-colors mb-6"
           >
             <ArrowLeft size={16} className="mr-1" /> Back to login
           </button>
-          <h2 className="text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="text-center text-2xl font-semibold text-ink">
             Forgot Password
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-ink-muted">
             Enter your email address and we'll send you a link to reset your password.
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
           {status && (
-            <div className={`p-4 rounded-lg flex items-start gap-3 ${
-              status.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+            <div className={`alert flex items-start gap-3 ${
+              status.type === 'success' ? 'alert-success' : 'alert-error'
             }`}>
               {status.type === 'success' ? (
-                <CheckCircle2 className="text-green-500 shrink-0 mt-0.5" size={20} />
+                <CheckCircle2 className="shrink-0 mt-0.5" size={20} />
               ) : (
-                <AlertCircle className="text-red-400 shrink-0 mt-0.5" size={20} />
+                <AlertCircle className="shrink-0 mt-0.5" size={20} />
               )}
               <p className="text-sm">{status.text}</p>
             </div>
@@ -97,17 +101,17 @@ const ForgotPassword: React.FC = () => {
             <div className="relative">
               <label htmlFor="email-address" className="sr-only">Email address</label>
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Mail className="h-5 w-5 text-gray-400" />
+                <Mail className="h-5 w-5 text-ink-subtle" />
               </div>
               <input
                 id="email-address"
                 type="email"
-                className={`appearance-none rounded-lg relative block w-full px-10 py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
+                className={`input px-10 ${errors.email ? 'input-error' : ''}`}
                 placeholder="Enter your email address"
                 {...register('email')}
               />
             </div>
-            {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>}
+            {errors.email && <p className="field-error">{errors.email.message}</p>}
           </div>
 
           {/* Cloudflare Turnstile Widget */}
@@ -121,7 +125,7 @@ const ForgotPassword: React.FC = () => {
                 setTurnstileToken(null);
                 setStatus({ type: 'error', text: 'Security check failed. Please refresh and try again.' });
               }}
-              options={{ theme: 'light', size: 'normal' }}
+              options={{ theme, size: 'normal' }}
             />
           </div>
 
@@ -129,10 +133,10 @@ const ForgotPassword: React.FC = () => {
             <button
               type="submit"
               disabled={isSubmitting || !emailValue?.trim() || !turnstileToken}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+              className="btn btn-primary w-full"
             >
               {isSubmitting ? (
-                <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
+                <Loader2 className="animate-spin h-5 w-5" />
               ) : null}
               {isSubmitting ? 'Sending Link...' : 'Send Reset Link'}
             </button>

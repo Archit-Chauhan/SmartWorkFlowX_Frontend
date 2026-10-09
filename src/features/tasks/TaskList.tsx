@@ -8,17 +8,17 @@ import {
 import Pagination from '../../components/Pagination';
 
 const PRIORITY_STYLES: Record<string, string> = {
-  High:   'bg-red-100 text-red-700 border-red-200',
-  Medium: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-  Low:    'bg-green-100 text-green-700 border-green-200',
+  High:   'chip-rejected',
+  Medium: 'chip-warning',
+  Low:    'chip-neutral',
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  Completed:   'bg-emerald-100 text-emerald-700',
-  'In Progress': 'bg-blue-100 text-blue-700',
-  Cancelled:   'bg-gray-100 text-gray-500',
-  Rejected:    'bg-red-100 text-red-600',
-  Pending:     'bg-yellow-100 text-yellow-700',
+  Completed:   'chip-completed',
+  'In Progress': 'chip-progress',
+  Cancelled:   'chip-rejected',
+  Rejected:    'chip-rejected',
+  Pending:     'chip-pending',
 };
 
 type Tab = 'action' | 'activity';
@@ -123,38 +123,38 @@ const TaskList: React.FC = () => {
   const isOverdue = (t: TaskItem) => !!t.dueDate && new Date(t.dueDate) < new Date() && isActive(t);
 
   const renderTaskCard = (task: TaskItem, showActions: boolean) => (
-    <div key={task.taskId} className={`bg-white rounded-xl border shadow-sm overflow-hidden ${isOverdue(task) ? 'border-red-300' : 'border-gray-200'}`}>
+    <div key={task.taskId} className={`card overflow-hidden ${isOverdue(task) ? 'border-error' : ''}`}>
       {/* Main Row */}
-      <div className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
-        <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 min-w-0">
+      <div className="px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+        <div className="flex items-start sm:items-center gap-3 flex-1 min-w-0">
           {/* Priority flag */}
-          <div className={`p-2 flex-shrink-0 rounded-lg border ${PRIORITY_STYLES[task.priority] || PRIORITY_STYLES.Medium}`}>
+          <div className={`chip ${PRIORITY_STYLES[task.priority] || PRIORITY_STYLES.Medium} p-2 flex-shrink-0 rounded-control`}>
             <Flag size={16} />
           </div>
           <div className="min-w-0">
-            <h4 className="font-semibold text-gray-800 truncate">{task.title}</h4>
-            <p className="text-xs text-gray-400 mt-0.5">
+            <h4 className="font-semibold text-ink truncate">{task.title}</h4>
+            <p className="caption mt-0.5">
               Step {task.currentStepOrder} ·{' '}
               {task.workflowTitle || 'Workflow'} ·{' '}
-              <span className={task.dueDate && isOverdue(task) ? 'text-red-500 font-semibold' : ''}>
+              <span className={`font-mono ${task.dueDate && isOverdue(task) ? 'text-error font-semibold' : ''}`}>
                 {task.dueDate ? `Due ${new Date(task.dueDate).toLocaleDateString()}` : 'No due date'}
               </span>
             </p>
             {task.description && (
-              <p className="text-xs text-gray-500 mt-1 line-clamp-2">{task.description}</p>
+              <p className="text-xs text-ink-muted mt-1 line-clamp-2">{task.description}</p>
             )}
             {task.rejectedReason && (
-              <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+              <p className="text-xs text-error mt-1 flex items-center gap-1">
                 <RotateCcw size={10} /> Sent back: {task.rejectedReason}
               </p>
             )}
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3 flex-shrink-0">
+        <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
           {/* Overdue badge */}
           {isOverdue(task) && (
-            <span className="text-xs font-bold px-2 py-1 rounded-full bg-red-100 text-red-600 border border-red-200 uppercase tracking-wide">
+            <span className="chip chip-rejected uppercase tracking-wide">
               Overdue
             </span>
           )}
@@ -162,7 +162,7 @@ const TaskList: React.FC = () => {
           {/* Category badge */}
           {task.categoryName && (
             <span
-              className="text-xs font-semibold px-2 py-1 rounded-full"
+              className="chip"
               style={{ backgroundColor: `${task.categoryColor}22`, color: task.categoryColor, border: `1px solid ${task.categoryColor}44` }}
             >
               {task.categoryName}
@@ -170,12 +170,12 @@ const TaskList: React.FC = () => {
           )}
 
           {/* Priority badge */}
-          <span className={`text-xs font-bold px-2 py-1 rounded-full border ${PRIORITY_STYLES[task.priority]}`}>
+          <span className={`chip ${PRIORITY_STYLES[task.priority]}`}>
             {task.priority}
           </span>
 
           {/* Status badge */}
-          <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase ${STATUS_STYLES[task.status] || STATUS_STYLES.Pending}`}>
+          <span className={`chip ${STATUS_STYLES[task.status] || STATUS_STYLES.Pending}`}>
             {task.status}
           </span>
 
@@ -185,7 +185,7 @@ const TaskList: React.FC = () => {
               <button
                 onClick={() => handleApprove(task)}
                 disabled={actionLoading === task.taskId}
-                className="flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium disabled:opacity-50 transition-colors"
+                className="btn btn-primary btn-sm"
               >
                 <CheckCircle size={15} />
                 {task.currentStepOrder === 0 ? 'Complete' : 'Approve'}
@@ -193,7 +193,7 @@ const TaskList: React.FC = () => {
               <button
                 onClick={() => setRejectModalTask(task)}
                 disabled={actionLoading === task.taskId}
-                className="flex items-center gap-1.5 bg-red-50 text-red-600 border border-red-200 px-4 py-2 rounded-lg hover:bg-red-100 text-sm font-medium disabled:opacity-50 transition-colors"
+                className="btn btn-ghost btn-sm text-error"
               >
                 <XCircle size={15} />
                 Reject
@@ -204,7 +204,7 @@ const TaskList: React.FC = () => {
           {/* Expand toggle */}
           <button
             onClick={() => toggleExpand(task.taskId)}
-            className="p-2 rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+            className="btn btn-ghost btn-sm px-2"
             title="View approval history"
           >
             {expandedId === task.taskId ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
@@ -214,26 +214,26 @@ const TaskList: React.FC = () => {
 
       {/* History Panel */}
       {expandedId === task.taskId && (
-        <div className="border-t border-gray-100 bg-gray-50 px-5 py-4">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Approval History</p>
+        <div className="border-t border-hairline bg-surface-1 px-5 py-4">
+          <p className="caption font-semibold uppercase tracking-wider mb-3">Approval History</p>
           {(history[task.taskId] ?? []).length === 0 ? (
-            <p className="text-xs text-gray-400 italic">No actions taken yet.</p>
+            <p className="text-xs text-ink-subtle italic">No actions taken yet.</p>
           ) : (
             <div className="space-y-2">
               {(history[task.taskId] ?? []).map((h, i) => (
                 <div key={i} className="flex items-center gap-3 text-sm">
                   <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    h.action === 'Approved' || h.action === 'Completed' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                    h.action === 'Approved' || h.action === 'Completed' ? 'bg-surface-2 text-success' : 'bg-surface-2 text-error'
                   }`}>
                     {h.action === 'Approved' || h.action === 'Completed' ? <CheckCircle size={12} /> : <XCircle size={12} />}
                   </div>
-                  <span className="font-medium text-gray-700">Step {h.stepOrder}</span>
-                  <span className={`font-semibold ${h.action === 'Approved' || h.action === 'Completed' ? 'text-green-600' : 'text-red-500'}`}>
+                  <span className="font-medium text-ink">Step {h.stepOrder}</span>
+                  <span className={`font-semibold ${h.action === 'Approved' || h.action === 'Completed' ? 'text-success' : 'text-error'}`}>
                     {h.action}
                   </span>
-                  <span className="text-gray-500">by {h.actedByName}</span>
-                  {h.comment && <span className="text-gray-400 italic">· "{h.comment}"</span>}
-                  <span className="ml-auto text-gray-400 text-xs">{new Date(h.actedAt).toLocaleString()}</span>
+                  <span className="text-ink-muted">by {h.actedByName}</span>
+                  {h.comment && <span className="text-ink-subtle italic">· "{h.comment}"</span>}
+                  <span className="ml-auto text-ink-subtle text-xs font-mono">{new Date(h.actedAt).toLocaleString()}</span>
                 </div>
               ))}
             </div>
@@ -255,10 +255,10 @@ const TaskList: React.FC = () => {
       {/* Header with tabs */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">
+          <h2 className="page-title">
             {activeTab === 'action' ? 'Action Center' : 'My Activity'}
           </h2>
-          <p className="text-sm text-gray-500">
+          <p className="caption">
             {activeTab === 'action'
               ? `${actionTotal} task${actionTotal !== 1 ? 's' : ''} assigned to you`
               : `${activityTotal} task${activityTotal !== 1 ? 's' : ''} you've acted on`}
@@ -266,20 +266,20 @@ const TaskList: React.FC = () => {
         </div>
 
         {/* Tab Toggle */}
-        <div className="flex bg-gray-100 rounded-lg p-1 self-start">
+        <div className="flex bg-surface-1 border border-hairline rounded-control p-1 self-start">
           <button
             onClick={() => setActiveTab('action')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-control text-sm font-medium transition-colors ${
               activeTab === 'action'
-                ? 'bg-white text-blue-700 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-accent-soft text-accent'
+                : 'text-ink-muted hover:text-ink'
             }`}
           >
             <CheckCircle size={15} />
             Action Center
             {actionTotal > 0 && (
-              <span className={`ml-1 px-1.5 py-0.5 rounded-full text-xs font-bold ${
-                activeTab === 'action' ? 'bg-blue-100 text-blue-700' : 'bg-gray-200 text-gray-600'
+              <span className={`chip ml-1 ${
+                activeTab === 'action' ? 'bg-accent text-on-accent' : 'chip-neutral'
               }`}>
                 {actionTotal}
               </span>
@@ -287,10 +287,10 @@ const TaskList: React.FC = () => {
           </button>
           <button
             onClick={() => setActiveTab('activity')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-medium transition-all ${
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-control text-sm font-medium transition-colors ${
               activeTab === 'activity'
-                ? 'bg-white text-blue-700 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
+                ? 'bg-accent-soft text-accent'
+                : 'text-ink-muted hover:text-ink'
             }`}
           >
             <Activity size={15} />
@@ -301,19 +301,19 @@ const TaskList: React.FC = () => {
 
       {/* Content */}
       {isCurrentLoading ? (
-        <div className="flex justify-center items-center h-48 text-gray-400">
+        <div className="empty-state flex justify-center items-center h-48">
           <Clock size={20} className="animate-spin mr-2" /> Loading tasks...
         </div>
       ) : currentList.length === 0 ? (
-        <div className="text-center py-16 text-gray-400">
+        <div className="empty-state">
           {activeTab === 'action' ? (
             <>
-              <CheckCircle size={40} className="mx-auto mb-3 text-green-400" />
+              <CheckCircle size={40} className="mx-auto mb-3 text-success" />
               <p className="font-medium">All clear! No tasks assigned to you.</p>
             </>
           ) : (
             <>
-              <Activity size={40} className="mx-auto mb-3 text-gray-300" />
+              <Activity size={40} className="mx-auto mb-3 text-ink-subtle" />
               <p className="font-medium">No activity yet.</p>
               <p className="text-sm mt-1">Tasks you complete or approve will appear here.</p>
             </>
@@ -340,34 +340,34 @@ const TaskList: React.FC = () => {
 
       {/* Reject Modal */}
       {rejectModalTask && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4">
+        <div className="fixed inset-0 bg-overlay flex items-center justify-center z-50 p-4">
+          <div className="bg-canvas border border-hairline rounded-card shadow-2xl w-full max-w-md p-6 space-y-4">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <AlertTriangle size={20} className="text-red-600" />
+              <div className="p-2 chip-rejected rounded-control">
+                <AlertTriangle size={20} className="text-error" />
               </div>
               <div>
-                <h3 className="font-bold text-gray-800">Reject Task</h3>
-                <p className="text-xs text-gray-500">{rejectModalTask.title}</p>
+                <h3 className="section-title">Reject Task</h3>
+                <p className="caption">{rejectModalTask.title}</p>
               </div>
             </div>
 
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Reason <span className="text-red-500">*</span>
+                <label className="label">
+                  Reason <span className="text-error">*</span>
                 </label>
                 <input
-                  className="w-full border border-gray-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-red-300 focus:border-red-400 outline-none"
+                  className="input"
                   placeholder="e.g. Missing documentation, Budget exceeded..."
                   value={rejectReason}
                   onChange={e => setRejectReason(e.target.value)}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Additional Comment (optional)</label>
+                <label className="label">Additional Comment (optional)</label>
                 <textarea
-                  className="w-full border border-gray-300 rounded-lg p-3 text-sm resize-none focus:ring-2 focus:ring-red-300 focus:border-red-400 outline-none"
+                  className="input resize-none"
                   rows={3}
                   placeholder="Any additional notes for the assignee..."
                   value={rejectComment}
@@ -379,14 +379,14 @@ const TaskList: React.FC = () => {
             <div className="flex gap-3 pt-2">
               <button
                 onClick={() => { setRejectModalTask(null); setRejectReason(''); setRejectComment(''); }}
-                className="flex-1 border border-gray-300 text-gray-700 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                className="btn btn-secondary flex-1"
               >
                 Cancel
               </button>
               <button
                 onClick={handleRejectSubmit}
                 disabled={!rejectReason.trim() || actionLoading !== null}
-                className="flex-1 bg-red-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-red-700 disabled:opacity-50 transition-colors"
+                className="btn btn-danger flex-1"
               >
                 {actionLoading ? 'Rejecting...' : 'Submit Rejection'}
               </button>

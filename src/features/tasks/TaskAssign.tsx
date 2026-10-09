@@ -113,44 +113,44 @@ const TaskAssign: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="text-center py-16 text-gray-400">Loading...</div>;
+  if (loading) return <div className="empty-state">Loading...</div>;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-          <ClipboardList className="text-blue-600" /> Assign New Task
+        <h2 className="page-title flex items-center gap-2">
+          <ClipboardList className="text-accent" /> Assign New Task
         </h2>
-        <p className="text-gray-500 mt-1">Start a workflow for an employee by assigning a task.</p>
+        <p className="caption mt-1">Start a workflow for an employee by assigning a task.</p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-5">
+      <form onSubmit={handleSubmit(onSubmit)} className="card card-pad space-y-5">
         <div className="grid gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Task Title <span className="text-red-500">*</span></label>
+            <label className="label">Task Title <span className="text-error">*</span></label>
             <input
-              className={`w-full border rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-200 outline-none ${errors.title ? 'border-red-500' : 'border-gray-200'}`}
+              className={`input ${errors.title ? 'input-error' : ''}`}
               placeholder="e.g. Q1 Expense Report Approval"
               {...register('title')}
             />
-            {errors.title && <p className="mt-1 text-sm text-red-500">{errors.title.message}</p>}
+            {errors.title && <p className="field-error">{errors.title.message}</p>}
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="block text-sm font-medium text-gray-700">Description</label>
+              <label className="label mb-0">Description</label>
               <button
                 type="button"
                 onClick={handleFormalize}
                 disabled={formalizing || !descriptionValue?.trim()}
-                className="flex items-center gap-1.5 text-xs font-semibold text-purple-600 hover:text-purple-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="btn btn-ghost btn-sm text-accent"
               >
                 <Sparkles size={13} className={formalizing ? 'animate-pulse' : ''} />
                 {formalizing ? 'Formalizing...' : 'Formalize with AI'}
               </button>
             </div>
             <textarea
-              className="w-full border border-gray-200 rounded-lg p-3 text-sm resize-none focus:ring-2 focus:ring-blue-200 outline-none"
+              className="input resize-none"
               rows={3}
               placeholder="Type rough notes, then click 'Formalize with AI'..."
               {...register('description')}
@@ -159,41 +159,41 @@ const TaskAssign: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Workflow (Active only) <span className="text-red-500">*</span></label>
+              <label className="label">Workflow (Active only) <span className="text-error">*</span></label>
               <select
-                className={`w-full border rounded-lg p-3 text-sm bg-white focus:ring-2 focus:ring-blue-200 outline-none ${errors.workflowId ? 'border-red-500' : 'border-gray-200'}`}
+                className={`input ${errors.workflowId ? 'input-error' : ''}`}
                 {...register('workflowId')}
               >
                 <option value={0} disabled>Select workflow...</option>
                 {workflows.map(w => <option key={w.workflowId} value={w.workflowId}>{w.title} ({w.stepCount} steps)</option>)}
               </select>
-              {errors.workflowId && <p className="mt-1 text-sm text-red-500">{errors.workflowId.message}</p>}
+              {errors.workflowId && <p className="field-error">{errors.workflowId.message}</p>}
               {workflows.length === 0 && (
-                <p className="text-xs text-amber-600 mt-1">⚠ No active workflows. Activate one in Workflows first.</p>
+                <p className="caption text-warning mt-1">⚠ No active workflows. Activate one in Workflows first.</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Assign To <span className="text-red-500">*</span></label>
+              <label className="label">Assign To <span className="text-error">*</span></label>
               <select
-                className={`w-full border rounded-lg p-3 text-sm bg-white focus:ring-2 focus:ring-blue-200 outline-none ${errors.assignedTo ? 'border-red-500' : 'border-gray-200'}`}
+                className={`input ${errors.assignedTo ? 'input-error' : ''}`}
                 {...register('assignedTo')}
               >
                 <option value={0} disabled>Select user...</option>
                 {users.map(u => <option key={u.userId} value={u.userId}>{u.name} — {u.roleName}</option>)}
               </select>
-              {errors.assignedTo && <p className="mt-1 text-sm text-red-500">{errors.assignedTo.message}</p>}
+              {errors.assignedTo && <p className="field-error">{errors.assignedTo.message}</p>}
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Category (optional)</label>
+            <label className="label">Category (optional)</label>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
                 onClick={() => setValue('categoryId', undefined)}
-                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
-                  !watch('categoryId') ? 'bg-gray-700 text-white border-gray-700' : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                className={`btn btn-sm rounded-pill ${
+                  !watch('categoryId') ? 'btn-primary' : 'btn-secondary'
                 }`}
               >
                 None
@@ -203,7 +203,7 @@ const TaskAssign: React.FC = () => {
                   key={c.categoryId}
                   type="button"
                   onClick={() => setValue('categoryId', c.categoryId)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all`}
+                  className="btn btn-sm rounded-pill bg-transparent"
                   style={
                     watch('categoryId') === c.categoryId
                       ? { backgroundColor: c.colorHex, color: '#fff', borderColor: c.colorHex }
@@ -218,18 +218,18 @@ const TaskAssign: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+              <label className="label">Priority</label>
               <div className="flex flex-col sm:flex-row gap-2">
                 {(['Low', 'Medium', 'High'] as TaskPriority[]).map(p => (
                   <button
                     key={p} type="button"
                     onClick={() => setValue('priority', p)}
-                    className={`flex-1 py-2 rounded-lg text-sm font-semibold border transition-all ${
+                    className={`btn flex-1 ${
                       priorityValue === p
-                        ? p === 'High' ? 'bg-red-500 text-white border-red-500'
-                          : p === 'Medium' ? 'bg-yellow-500 text-white border-yellow-500'
-                          : 'bg-green-500 text-white border-green-500'
-                        : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                        ? p === 'High' ? 'bg-error text-on-accent'
+                          : p === 'Medium' ? 'bg-warning text-ink'
+                          : 'bg-success text-on-accent'
+                        : 'btn-secondary'
                     }`}
                   >{p}</button>
                 ))}
@@ -237,10 +237,10 @@ const TaskAssign: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Due Date (optional)</label>
+              <label className="label">Due Date (optional)</label>
               <input
                 type="date"
-                className="w-full border border-gray-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-200 outline-none"
+                className="input font-mono"
                 {...register('dueDate')}
                 min={new Date().toISOString().split('T')[0]}
               />
@@ -249,10 +249,7 @@ const TaskAssign: React.FC = () => {
         </div>
 
         {message && (
-          <div className={`px-4 py-3 rounded-lg text-sm font-medium ${
-            message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200'
-              : 'bg-red-50 text-red-700 border border-red-200'
-          }`}>
+          <div className={`alert ${message.type === 'success' ? 'alert-success' : 'alert-error'}`}>
             {message.text}
           </div>
         )}
@@ -260,7 +257,7 @@ const TaskAssign: React.FC = () => {
         <button
           type="submit"
           disabled={isSubmitting || workflows.length === 0}
-          className="w-full bg-blue-600 text-white py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-blue-700 disabled:opacity-60 font-semibold transition-colors"
+          className="btn btn-primary w-full"
         >
           <Send size={17} />
           {isSubmitting ? 'Assigning...' : 'Assign Task'}

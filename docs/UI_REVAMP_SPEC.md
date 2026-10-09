@@ -37,7 +37,7 @@ Defined in `src/index.css` under `@layer components`. Feature code uses these in
 | `.alert` + `.alert-error` / `-success` / `-info` | Inline messages. |
 
 ## 4. Theme toggle
-- `ThemeContext` (`src/context/ThemeContext.tsx`) exposes `{ theme, setTheme, toggle }`, with theme `'light' | 'dark'`.
+- `useTheme` (`src/hooks/useTheme.ts`, provider-free store) exposes `{ theme, setTheme, toggle }`, with theme `'light' | 'dark'`.
 - Initial value: saved `swfx-theme` in localStorage, else the OS `prefers-color-scheme`. Applied by setting `data-theme` on `<html>`.
 - A tiny inline script in `index.html` sets `data-theme` before first paint (no flash). All storage access in try/catch.
 - Toggle button (sun/moon icon, `aria-label="Toggle theme"`) in the header, and on the auth screens (top-right).

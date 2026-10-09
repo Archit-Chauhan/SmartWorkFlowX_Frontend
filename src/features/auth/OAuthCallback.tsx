@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import ThemeToggle from '../../components/ThemeToggle';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, AlertCircle } from 'lucide-react';
 
@@ -41,14 +42,15 @@ const OAuthCallback: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-        <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-lg border border-gray-100 text-center">
-          <AlertCircle className="mx-auto text-red-500 mb-4" size={48} />
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Authentication Error</h2>
-          <p className="text-gray-600 mb-6">{error}</p>
+      <div className="min-h-screen flex items-center justify-center relative bg-surface-1 px-4">
+        <div className="absolute top-4 right-4"><ThemeToggle /></div>
+        <div className="w-full max-w-[400px] card card-pad text-center">
+          <AlertCircle className="mx-auto text-error mb-4" size={48} />
+          <h2 className="section-title mb-2">Authentication Error</h2>
+          <p className="text-ink-muted mb-6">{error}</p>
           <button 
             onClick={() => navigate('/login')}
-            className="w-full bg-blue-600 text-white font-medium py-2 rounded-lg hover:bg-blue-700 transition"
+            className="btn btn-primary w-full"
           >
             Back to Login
           </button>
@@ -58,10 +60,11 @@ const OAuthCallback: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
-      <Loader2 className="animate-spin text-blue-600 mb-4" size={48} />
-      <h2 className="text-xl font-semibold text-gray-800">Authenticating...</h2>
-      <p className="text-gray-500 text-sm mt-2">Please wait while we log you in safely.</p>
+    <div className="min-h-screen flex flex-col items-center justify-center relative bg-surface-1 px-4">
+      <div className="absolute top-4 right-4"><ThemeToggle /></div>
+      <Loader2 className="animate-spin text-accent mb-4" size={48} />
+      <h2 className="section-title">Authenticating...</h2>
+      <p className="text-ink-muted text-sm mt-2">Please wait while we log you in safely.</p>
     </div>
   );
 };

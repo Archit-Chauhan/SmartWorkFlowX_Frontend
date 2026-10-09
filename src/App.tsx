@@ -3,8 +3,10 @@ import { BrowserRouter } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AppRoutes from './routes/AppRoutes';
+import { useTheme } from './hooks/useTheme';
 
 const App: React.FC = () => {
+  const { theme } = useTheme();
   return (
     <BrowserRouter>
       <AppRoutes />
@@ -18,7 +20,7 @@ const App: React.FC = () => {
         pauseOnFocusLoss 
         draggable 
         pauseOnHover 
-        theme="light"
+        theme={theme}
       />
     </BrowserRouter>
   );

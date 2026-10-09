@@ -16,9 +16,9 @@ import * as z from 'zod';
 interface Role { roleId: number; roleName: string; }
 
 const STATUS_STYLES: Record<string, string> = {
-  Active:   'bg-green-100 text-green-700',
-  Draft:    'bg-yellow-100 text-yellow-700',
-  Inactive: 'bg-gray-100 text-gray-500',
+  Active:   'chip-completed',
+  Draft:    'chip-warning',
+  Inactive: 'chip-neutral',
 };
 
 const workflowStepSchema = z.object({
@@ -229,46 +229,46 @@ const WorkflowBuilder: React.FC = () => {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="max-w-5xl mx-auto space-y-6">
       {/* ── Create / Edit Form ─────────────────────────────── */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <h2 className="text-xl font-bold flex items-center gap-2 mb-5">
-          <GitPullRequest className="text-blue-600" />
+      <div className="card card-pad">
+        <h2 className="section-title flex items-center gap-2 mb-5">
+          <GitPullRequest className="text-accent" />
           {editId ? 'Edit Workflow Template' : 'Create Workflow Template'}
         </h2>
 
         {formError && (
-          <div className="mb-4 bg-red-50 border-l-4 border-red-400 p-4 flex items-center gap-3">
-            <AlertCircle className="text-red-400" size={20} />
-            <p className="text-sm text-red-700">{formError}</p>
+          <div className="alert alert-error mb-4 flex items-center gap-3">
+            <AlertCircle className="text-error" size={20} />
+            <p className="text-sm text-error">{formError}</p>
           </div>
         )}
 
         <div className="grid gap-4">
           <div>
             <input
-              className={`p-3 border rounded-lg w-full focus:ring-2 focus:ring-blue-200 outline-none ${errors.title ? 'border-red-500' : 'border-gray-200'}`}
+              className={`input ${errors.title ? 'input-error' : ''}`}
               placeholder="Workflow Title (e.g., Expense Approval)"
               {...register('title')}
             />
-            {errors.title && <p className="mt-1 text-sm text-red-500">{errors.title.message}</p>}
+            {errors.title && <p className="field-error">{errors.title.message}</p>}
           </div>
 
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-sm font-medium text-gray-600">Description</label>
+              <label className="label !mb-0">Description</label>
               <button
                 type="button"
                 onClick={handleFormalizeDescription}
                 disabled={formalizing || !watch('description')?.trim()}
-                className="flex items-center gap-1.5 text-xs font-semibold text-purple-600 hover:text-purple-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="btn btn-ghost btn-sm text-accent hover:text-accent"
               >
                 <Sparkles size={13} className={formalizing ? 'animate-pulse' : ''} />
                 {formalizing ? 'Formalizing...' : 'Formalize with AI'}
               </button>
             </div>
             <textarea
-              className="p-3 border border-gray-200 rounded-lg w-full resize-none focus:ring-2 focus:ring-blue-200 outline-none"
+              className="input resize-none"
               rows={2}
               placeholder="Type rough notes, then click 'Formalize with AI'..."
               {...register('description')}
@@ -277,14 +277,14 @@ const WorkflowBuilder: React.FC = () => {
 
           {editId && (
             <div className="flex items-center gap-3">
-              <label className="text-sm font-medium text-gray-600">Status:</label>
+              <label className="label !mb-0">Status:</label>
               {(['Draft', 'Active', 'Inactive'] as const).map(s => (
                 <button
                   key={s}
                   type="button"
                   onClick={() => setValue('status', s)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-semibold border transition-all ${
-                    statusValue === s ? STATUS_STYLES[s] + ' border-current' : 'border-gray-200 text-gray-500 hover:border-gray-300'
+                  className={`chip cursor-pointer border border-transparent ${
+                    statusValue === s ? STATUS_STYLES[s] + ' !border-current' : 'chip-neutral hover:border-hairline-strong'
                   }`}
                 >{s}</button>
               ))}
@@ -295,25 +295,29 @@ const WorkflowBuilder: React.FC = () => {
         {/* Steps */}
         <div className="mt-6">
           <div className="flex justify-between items-center mb-3">
-            <h3 className="font-semibold text-gray-700">Approval Steps</h3>
-            <button type="button" onClick={addStep} className="flex items-center gap-1 text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors">
+            <h3 className="section-title">Approval Steps</h3>
+            <button type="button" onClick={addStep} title="Add step" className="btn btn-secondary btn-sm">
               <Plus size={15} /> Add Step
             </button>
           </div>
 
-          {errors.steps?.root && <p className="mb-2 text-sm text-red-500">{errors.steps.root.message}</p>}
+          {errors.steps?.root && <p className="field-error mb-2">{errors.steps.root.message}</p>}
 
-          <div className="space-y-3">
+          <div>
             {fields.map((field: any, idx: number) => (
-              <div key={field.id} className="flex flex-col gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+              <div key={field.id} className="flex gap-3">
+                <div className="flex flex-col items-center flex-shrink-0">
+                  <span className="w-7 h-7 rounded-pill bg-accent text-on-accent text-xs font-semibold flex items-center justify-center">
+                    {idx + 1}
+                  </span>
+                  {idx < fields.length - 1 && <span className="w-px flex-1 bg-hairline-strong" />}
+                </div>
+              <div className={`flex-1 min-w-0 flex flex-col gap-3 p-4 bg-surface-1 rounded-card border border-hairline ${idx < fields.length - 1 ? 'mb-3' : ''}`}>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                   <div className="flex items-center gap-3 w-full sm:w-auto flex-1">
-                    <span className="w-7 h-7 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0">
-                      {idx + 1}
-                    </span>
                     <div className="flex-1">
                       <input
-                        className={`w-full p-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-200 outline-none min-w-0 ${errors.steps?.[idx]?.stepName ? 'border-red-500' : 'border-gray-200'}`}
+                        className={`input min-w-0 ${errors.steps?.[idx]?.stepName ? 'input-error' : ''}`}
                         placeholder="Step Name (e.g., Manager Review)"
                         {...register(`steps.${idx}.stepName`)}
                       />
@@ -321,28 +325,28 @@ const WorkflowBuilder: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-3 w-full sm:w-auto">
                     <select
-                      className={`flex-1 p-2 border rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-200 outline-none ${errors.steps?.[idx]?.approverRoleId ? 'border-red-500' : 'border-gray-200'}`}
+                      className={`input flex-1 ${errors.steps?.[idx]?.approverRoleId ? 'input-error' : ''}`}
                       {...register(`steps.${idx}.approverRoleId`)}
                     >
                       {roles.map(r => <option key={r.roleId} value={r.roleId}>{r.roleName}</option>)}
                     </select>
-                    <button type="button" onClick={() => removeStep(idx)} className="text-red-400 hover:text-red-600 p-1 rounded transition-colors flex-shrink-0">
+                    <button type="button" onClick={() => removeStep(idx)} title="Remove step" className="btn btn-ghost px-2 flex-shrink-0 hover:text-error">
                       <Trash2 size={17} />
                     </button>
                   </div>
                 </div>
                 
-                {errors.steps?.[idx]?.stepName && <p className="text-xs text-red-500 pl-10">{errors.steps[idx].stepName?.message}</p>}
+                {errors.steps?.[idx]?.stepName && <p className="field-error">{errors.steps[idx].stepName?.message}</p>}
 
-                <div className="flex flex-col sm:flex-row gap-3 sm:pl-10">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <input
-                    className="flex-1 p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-200 outline-none min-w-0"
+                    className="input flex-1 min-w-0"
                     placeholder="Instructions for approver (optional)"
                     {...register(`steps.${idx}.description`)}
                   />
                   <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                     <select
-                      className="w-full sm:w-48 p-2 border border-gray-200 rounded-lg bg-white text-sm focus:ring-2 focus:ring-blue-200 outline-none"
+                      className="input w-full sm:w-56"
                       {...register(`steps.${idx}.onRejectAction`)}
                     >
                       <option value="Cancel">On Reject → Cancel task</option>
@@ -350,7 +354,7 @@ const WorkflowBuilder: React.FC = () => {
                     </select>
                     <input
                       type="number"
-                      className="w-full sm:w-24 p-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-200 outline-none"
+                      className="input w-full sm:w-24"
                       placeholder="Esc. hrs"
                       title="Escalation hours (optional)"
                       min={1}
@@ -358,6 +362,7 @@ const WorkflowBuilder: React.FC = () => {
                     />
                   </div>
                 </div>
+              </div>
               </div>
             ))}
           </div>
@@ -368,12 +373,12 @@ const WorkflowBuilder: React.FC = () => {
             type="button"
             onClick={handleSubmit(onSubmit as any)}
             disabled={isSubmitting}
-            className="flex-1 bg-blue-600 text-white py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-blue-700 disabled:opacity-60 font-semibold transition-colors"
+            className="btn btn-primary flex-1"
           >
             {isSubmitting ? <><Save size={17} className="animate-pulse" /> Saving...</> : <><Save size={17} /> {editId ? 'Save Changes' : 'Create Workflow'}</>}
           </button>
           {isEditing && (
-            <button type="button" onClick={resetForm} className="px-6 border border-gray-300 text-gray-600 py-3 rounded-xl hover:bg-gray-50 font-semibold transition-colors">
+            <button type="button" onClick={resetForm} className="btn btn-secondary px-6">
               Cancel
             </button>
           )}
@@ -381,55 +386,55 @@ const WorkflowBuilder: React.FC = () => {
       </div>
 
       {/* ── Workflow List ──────────────────────────────────── */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h3 className="font-semibold text-gray-800 text-lg">Workflow Templates</h3>
+      <div className="card overflow-hidden">
+        <div className="px-6 py-4 border-b border-hairline">
+          <h3 className="section-title">Workflow Templates</h3>
         </div>
 
         {loading ? (
-          <div className="p-8 text-center text-gray-400">Loading...</div>
+          <div className="empty-state">Loading...</div>
         ) : workflows.length === 0 ? (
-          <div className="p-8 text-center text-gray-400">No workflows yet. Create one above.</div>
+          <div className="empty-state">No workflows yet. Create one above.</div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-hairline">
             {workflows.map(wf => (
               <div key={wf.workflowId}>
                 {/* Row */}
                 <div className="px-6 py-4 flex flex-wrap gap-3 items-center">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-semibold text-gray-800 truncate">{wf.title}</h4>
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${STATUS_STYLES[wf.status]}`}>
+                      <h4 className="font-medium text-ink truncate">{wf.title}</h4>
+                      <span className={`chip ${STATUS_STYLES[wf.status]}`}>
                         {wf.status}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-400 mt-0.5">{wf.stepCount} approval step{wf.stepCount !== 1 ? 's' : ''}</p>
+                    <p className="caption mt-0.5">{wf.stepCount} approval step{wf.stepCount !== 1 ? 's' : ''}</p>
                   </div>
 
                   {/* Actions */}
                   <div className="flex items-center gap-2">
                     {wf.status === 'Draft' && (
                       <button onClick={() => handleActivate(wf)} title="Activate"
-                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors">
+                        className="btn btn-ghost px-2 text-success">
                         <Power size={17} />
                       </button>
                     )}
                     {wf.status === 'Active' && (
                       <button onClick={() => handleDeactivate(wf.workflowId)} title="Deactivate (soft-delete)"
-                        className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg transition-colors">
+                        className="btn btn-ghost px-2">
                         <PowerOff size={17} />
                       </button>
                     )}
                     <button onClick={() => handleClone(wf.workflowId)} title="Clone as template"
-                      className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors">
+                      className="btn btn-ghost px-2">
                       <Copy size={17} />
                     </button>
                     <button onClick={() => populateEditForm(wf.workflowId)} title="Edit"
-                      className="p-2 text-gray-500 hover:bg-gray-100 rounded-lg transition-colors">
+                      className="btn btn-ghost px-2">
                       <Edit2 size={17} />
                     </button>
                     <button onClick={() => toggleExpand(wf.workflowId)} title="View steps"
-                      className="p-2 text-gray-400 hover:bg-gray-100 rounded-lg transition-colors">
+                      className="btn btn-ghost px-2">
                       {expandedId === wf.workflowId ? <ChevronUp size={17} /> : <Eye size={17} />}
                     </button>
                   </div>
@@ -437,25 +442,23 @@ const WorkflowBuilder: React.FC = () => {
 
                 {/* Step Detail Panel */}
                 {expandedId === wf.workflowId && detailCache[wf.workflowId] && (
-                  <div className="bg-gray-50 px-6 py-4 border-t border-gray-100 space-y-2">
+                  <div className="bg-surface-1 px-6 py-4 border-t border-hairline space-y-2">
                     {detailCache[wf.workflowId].steps.map(s => (
-                      <div key={s.stepId} className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 text-sm text-gray-600 bg-white p-3 rounded-lg border border-gray-100">
+                      <div key={s.stepId} className="flex flex-wrap sm:flex-nowrap items-center gap-2 sm:gap-3 text-sm text-ink-muted bg-canvas p-3 rounded-card border border-hairline">
                         <div className="flex items-center gap-3 w-full sm:w-auto flex-1 min-w-0">
-                          <span className="w-6 h-6 flex-shrink-0 rounded-full bg-blue-100 text-blue-700 text-xs font-bold flex items-center justify-center">
+                          <span className="w-6 h-6 flex-shrink-0 rounded-pill bg-accent-soft text-accent text-xs font-semibold flex items-center justify-center">
                             {s.stepOrder}
                           </span>
-                          <span className="font-semibold text-gray-700 truncate">{s.stepName}</span>
-                          <span className="text-gray-400 whitespace-nowrap">→ {s.approverRoleName}</span>
+                          <span className="font-medium text-ink truncate">{s.stepName}</span>
+                          <span className="text-ink-subtle whitespace-nowrap">→ {s.approverRoleName}</span>
                         </div>
-                        {s.description && <span className="text-gray-400 italic text-xs w-full sm:w-auto truncate">· {s.description}</span>}
+                        {s.description && <span className="text-ink-subtle italic text-xs w-full sm:w-auto truncate">· {s.description}</span>}
                         <div className="flex gap-2 w-full sm:w-auto sm:ml-auto">
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${
-                            s.onRejectAction === 'GoBack' ? 'bg-orange-50 text-orange-600' : 'bg-gray-100 text-gray-500'
-                          }`}>
+                          <span className={`chip ${s.onRejectAction === 'GoBack' ? 'chip-warning' : 'chip-neutral'}`}>
                             {s.onRejectAction === 'GoBack' ? '↩ GoBack' : '✕ Cancel'}
                           </span>
                           {s.escalationHours && (
-                            <span className="text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">
+                            <span className="chip chip-warning">
                               ⏱ {s.escalationHours}h
                             </span>
                           )}

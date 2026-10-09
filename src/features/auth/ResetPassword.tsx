@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ThemeToggle from '../../components/ThemeToggle';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import { Lock, AlertCircle, CheckCircle2, Loader2, Eye, EyeOff } from 'lucide-react';
@@ -76,14 +77,15 @@ const ResetPassword: React.FC = () => {
 
   if (!email || !token) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg border border-gray-100 text-center">
-          <AlertCircle className="mx-auto text-red-500 mb-4" size={48} />
-          <h2 className="text-2xl font-bold text-gray-900">Invalid Link</h2>
-          <p className="text-gray-600 mb-6">{status?.text}</p>
+      <div className="min-h-screen flex items-center justify-center relative bg-surface-1 py-12 px-4">
+        <div className="absolute top-4 right-4"><ThemeToggle /></div>
+        <div className="w-full max-w-[400px] space-y-6 card card-pad text-center">
+          <AlertCircle className="mx-auto text-error mb-4" size={48} />
+          <h2 className="text-xl font-semibold text-ink">Invalid Link</h2>
+          <p className="text-ink-muted mb-6">{status?.text}</p>
           <button 
             onClick={() => navigate('/forgot-password')}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors"
+            className="btn btn-primary w-full"
           >
             Request New Link
           </button>
@@ -93,26 +95,27 @@ const ResetPassword: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg border border-gray-100">
+    <div className="min-h-screen flex items-center justify-center relative bg-surface-1 py-12 px-4">
+      <div className="absolute top-4 right-4"><ThemeToggle /></div>
+      <div className="w-full max-w-[400px] space-y-6 card card-pad">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="text-center text-2xl font-semibold text-ink">
             Set New Password
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-ink-muted">
             Please enter your new password below for <b>{email}</b>.
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
           {status && (
-            <div className={`p-4 rounded-lg flex items-start gap-3 ${
-              status.type === 'success' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
+            <div className={`alert flex items-start gap-3 ${
+              status.type === 'success' ? 'alert-success' : 'alert-error'
             }`}>
               {status.type === 'success' ? (
-                <CheckCircle2 className="text-green-500 shrink-0 mt-0.5" size={20} />
+                <CheckCircle2 className="shrink-0 mt-0.5" size={20} />
               ) : (
-                <AlertCircle className="text-red-400 shrink-0 mt-0.5" size={20} />
+                <AlertCircle className="shrink-0 mt-0.5" size={20} />
               )}
               <p className="text-sm">{status.text}</p>
             </div>
@@ -123,56 +126,56 @@ const ResetPassword: React.FC = () => {
                 <div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
+                      <Lock className="h-5 w-5 text-ink-subtle" />
                     </div>
                     <input
                       type={showPassword ? 'text' : 'password'}
-                      className={`appearance-none rounded-lg relative block w-full pl-10 pr-10 py-3 border ${errors.password ? 'border-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
+                      className={`input pl-10 pr-10 ${errors.password ? 'input-error' : ''}`}
                       placeholder="New Password"
                       {...register('password')}
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-ink-subtle hover:text-ink transition-colors"
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
                     >
                       {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
-                  {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>}
+                  {errors.password && <p className="field-error">{errors.password.message}</p>}
                 </div>
 
                 <div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Lock className="h-5 w-5 text-gray-400" />
+                      <Lock className="h-5 w-5 text-ink-subtle" />
                     </div>
                     <input
                       type={showConfirmPassword ? 'text' : 'password'}
-                      className={`appearance-none rounded-lg relative block w-full pl-10 pr-10 py-3 border ${errors.confirmPassword ? 'border-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
+                      className={`input pl-10 pr-10 ${errors.confirmPassword ? 'input-error' : ''}`}
                       placeholder="Confirm New Password"
                       {...register('confirmPassword')}
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-ink-subtle hover:text-ink transition-colors"
                       aria-label={showConfirmPassword ? 'Hide confirm password' : 'Show confirm password'}
                     >
                       {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
-                  {errors.confirmPassword && <p className="mt-1 text-sm text-red-500">{errors.confirmPassword.message}</p>}
+                  {errors.confirmPassword && <p className="field-error">{errors.confirmPassword.message}</p>}
                 </div>
 
                 <button
                   type="submit"
                   disabled={isSubmitting || !passwordValue || !confirmPasswordValue}
-                  className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-70 disabled:cursor-not-allowed"
+                  className="btn btn-primary w-full"
                 >
                   {isSubmitting ? (
-                    <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
+                    <Loader2 className="animate-spin h-5 w-5" />
                   ) : null}
                   {isSubmitting ? 'Resetting Password...' : 'Reset Password'}
                 </button>
