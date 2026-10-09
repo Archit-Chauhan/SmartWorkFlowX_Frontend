@@ -1,5 +1,6 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
+import { getPageItems } from './paginationUtils';
 
 export interface PaginationProps {
   currentPage: number;
@@ -9,88 +10,115 @@ export interface PaginationProps {
   onPageChange: (page: number) => void;
 }
 
-const Pagination: React.FC<PaginationProps> = ({ 
-  currentPage, 
-  totalPages, 
-  totalItems, 
+const baseButton =
+  'inline-flex items-center justify-center h-9 min-w-9 px-2 rounded-control border text-sm transition-colors duration-150 ' +
+  'disabled:opacity-40 disabled:cursor-not-allowed';
+const idleButton = `${baseButton} border-hairline-strong bg-canvas text-ink hover:bg-surface-1 disabled:hover:bg-canvas`;
+const activeButton = `${baseButton} border-accent bg-accent text-on-accent font-semibold`;
+
+const Pagination: React.FC<PaginationProps> = ({
+  currentPage,
+  totalPages,
+  totalItems,
   pageSize = 10,
-  onPageChange 
+  onPageChange
 }) => {
   if (totalPages <= 1) return null;
 
   const startItem = (currentPage - 1) * pageSize + 1;
   const endItem = totalItems ? Math.min(currentPage * pageSize, totalItems) : currentPage * pageSize;
+  const atStart = currentPage === 1;
+  const atEnd = currentPage === totalPages;
+
+  const edgeControls = (
+    <>
+      <button
+        type="button"
+        onClick={() => onPageChange(1)}
+        disabled={atStart}
+        className={idleButton}
+        aria-label="First page"
+      >
+        <ChevronsLeft size={16} aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={atStart}
+        className={idleButton}
+        aria-label="Previous page"
+      >
+        <ChevronLeft size={16} aria-hidden="true" />
+      </button>
+    </>
+  );
+
+  const trailingControls = (
+    <>
+      <button
+        type="button"
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={atEnd}
+        className={idleButton}
+        aria-label="Next page"
+      >
+        <ChevronRight size={16} aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        onClick={() => onPageChange(totalPages)}
+        disabled={atEnd}
+        className={idleButton}
+        aria-label="Last page"
+      >
+        <ChevronsRight size={16} aria-hidden="true" />
+      </button>
+    </>
+  );
 
   return (
-    <div className="flex items-center justify-between border-t border-hairline bg-canvas px-4 py-3 sm:px-6 mt-4">
-      <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-        <div>
-          {totalItems !== undefined && (
-            <p className="text-sm text-ink-muted">
-              Showing <span className="font-medium">{startItem}</span> to <span className="font-medium">{endItem}</span> of{' '}
-              <span className="font-medium">{totalItems}</span> results
-            </p>
-          )}
-        </div>
-        <div>
-          <nav className="isolate inline-flex -space-x-px" aria-label="Pagination">
-            <button
-              onClick={() => onPageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              className="relative inline-flex items-center rounded-l-control px-2 py-2 text-ink-subtle ring-1 ring-inset ring-hairline-strong hover:bg-surface-1 focus:z-20 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span className="sr-only">Previous</span>
-              <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-            </button>
-            
-            {/* Generate Page Numbers */}
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => onPageChange(page)}
-                aria-current={page === currentPage ? 'page' : undefined}
-                className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 ${
-                  page === currentPage
-                    ? 'z-10 bg-accent text-on-accent'
-                    : 'text-ink ring-1 ring-inset ring-hairline-strong hover:bg-surface-1'
-                }`}
-              >
-                {page}
-              </button>
-            ))}
+    <div className="flex items-center justify-between gap-4 border-t border-hairline bg-canvas px-4 py-3 sm:px-6 mt-4">
+      {/* Summary */}
+      {totalItems !== undefined && (
+        <p className="hidden sm:block text-sm text-ink-muted whitespace-nowrap">
+          Showing <span className="font-medium text-ink">{startItem}</span> to{' '}
+          <span className="font-medium text-ink">{endItem}</span> of{' '}
+          <span className="font-medium text-ink">{totalItems}</span> results
+        </p>
+      )}
 
+      {/* Desktop: first, previous, windowed pages with ellipses, next, last */}
+      <nav className="hidden sm:flex items-center gap-1 ml-auto" aria-label="Pagination">
+        {edgeControls}
+        {getPageItems(currentPage, totalPages, 1).map(item =>
+          typeof item === 'number' ? (
             <button
-              onClick={() => onPageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className="relative inline-flex items-center rounded-r-control px-2 py-2 text-ink-subtle ring-1 ring-inset ring-hairline-strong hover:bg-surface-1 focus:z-20 disabled:opacity-50 disabled:cursor-not-allowed"
+              type="button"
+              key={item}
+              onClick={() => onPageChange(item)}
+              aria-current={item === currentPage ? 'page' : undefined}
+              aria-label={`Go to page ${item}`}
+              className={item === currentPage ? activeButton : idleButton}
             >
-              <span className="sr-only">Next</span>
-              <ChevronRight className="h-5 w-5" aria-hidden="true" />
+              {item}
             </button>
-          </nav>
-        </div>
-      </div>
-      
-      {/* Mobile version */}
-      <div className="flex flex-1 justify-between sm:hidden">
-        <button
-          onClick={() => onPageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="btn btn-secondary"
-        >
-          Previous
-        </button>
-        <div className="flex items-center text-sm text-ink-muted">
-           Page {currentPage} of {totalPages}
-        </div>
-        <button
-          onClick={() => onPageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className="btn btn-secondary ml-3"
-        >
-          Next
-        </button>
-      </div>
+          ) : (
+            <span key={item} className="inline-flex items-center justify-center h-9 min-w-9 text-ink-subtle" aria-hidden="true">
+              …
+            </span>
+          )
+        )}
+        {trailingControls}
+      </nav>
+
+      {/* Mobile: compact controls with a page indicator */}
+      <nav className="flex sm:hidden w-full items-center justify-between gap-1" aria-label="Pagination">
+        <div className="flex items-center gap-1">{edgeControls}</div>
+        <span className="text-sm text-ink-muted">
+          Page <span className="font-medium text-ink">{currentPage}</span> of {totalPages}
+        </span>
+        <div className="flex items-center gap-1">{trailingControls}</div>
+      </nav>
     </div>
   );
 };
