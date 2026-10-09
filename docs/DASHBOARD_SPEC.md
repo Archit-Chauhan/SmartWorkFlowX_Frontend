@@ -18,10 +18,11 @@ Same query. Returns `text/csv` of the filtered tasks: `TaskId,Title,Workflow,Cat
 - **Range**: `from` 00:00 to `to` 23:59:59.999. **Previous period**: the same number of days directly before `from`.
 - **Created**: tasks with `createdAt` inside the range.
 - **Completed**: tasks with `completedAt` inside the range.
-- **Open** (at the end of the range): created on or before `to` and not completed/cancelled by then. A task counts as completed by `to` when `completedAt <= to`; there is no cancellation date, so Cancelled tasks are always excluded.
+- **Open** (at the end of the range): created on or before `to` and not completed/cancelled by then. A task counts as completed by `to` when `completedAt <= to`; there is no cancellation date, so Cancelled and Rejected tasks are always excluded.
 - **Overdue** (at the end of the range): Open tasks whose `dueDate < end of range`.
 - **On-time rate**: completed in range with `completedAt <= dueDate`, divided by all completed in range, as a percent. `null` when nothing was completed or no due dates exist.
 - **Average completion time**: mean of `completedAt - createdAt` in hours for tasks completed in range. `null` when none.
+- **No data**: the API sends `current: 0` for on-time rate and average completion time when nothing was completed, so the UI shows a dash whenever `kpis.completed.current` is 0. `previous` is `null` when it cannot be computed.
 - **previous**: the same measure evaluated for the previous period (for Open and Overdue, evaluated at the previous period's end).
 - **Series**: one point per bucket. Bucket is `day` when the range is 45 days or fewer, otherwise `week` (Monday start). Every bucket in the range is present, with zeros where nothing happened.
 - **byStatus / byPriority / byCategory / byWorkflow**: tasks *created in the range*. `byWorkflow.avgCycleHours` is computed from those that are completed.

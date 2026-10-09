@@ -23,7 +23,7 @@ export interface KpiValue {
 export interface DashboardKpis {
   created: KpiValue;
   completed: KpiValue;
-  /** Not completed or cancelled at the end of the range. */
+  /** Not completed, cancelled or rejected at the end of the range. */
   open: KpiValue;
   /** Open and past due at the end of the range. */
   overdue: KpiValue;

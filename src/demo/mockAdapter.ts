@@ -3,6 +3,8 @@ import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { buildStore, CATEGORIES, ME_BY_ROLE, ROLES, type DemoStore } from './data';
 import type { UserRole } from '../models/User';
 import type { TaskItem } from '../models/Task';
+import type { DashboardFilters } from '../models/Dashboard';
+import { computeDashboard, tasksToCsv, type DashboardScope } from './dashboard';
 
 let store: DemoStore | null = null;
 const isEmpty = () => { try { return localStorage.getItem('swfx-demo-data') === 'empty'; } catch { return false; } };
@@ -24,6 +26,21 @@ const contains = <T extends object>(q: URLSearchParams, ...fields: string[]) => 
 const csv = (rows: Record<string, unknown>[]) => {
   const keys = rows[0] ? Object.keys(rows[0]) : [];
   return [keys.join(','), ...rows.map(r => keys.map(k => JSON.stringify(r[k] ?? '')).join(','))].join('\n');
+};
+const dashboardArgs = (q: URLSearchParams, s: DemoStore): { filters: DashboardFilters; scope: DashboardScope } => {
+  const day = (d: Date) => d.toISOString().slice(0, 10);
+  const today = new Date();
+  const num = (k: string) => (q.get(k) ? Number(q.get(k)) : undefined);
+  const filters: DashboardFilters = {
+    from: q.get('from') || day(new Date(today.getTime() - 29 * 86400_000)), to: q.get('to') || day(today),
+    status: q.get('status') || undefined, priority: q.get('priority') || undefined,
+    categoryId: num('categoryId'), workflowId: num('workflowId'), assigneeId: num('assigneeId'),
+  };
+  const name = meName();
+  const scope: DashboardScope = currentRole() === 'Employee'
+    ? { kind: 'self', userId: meId(), actedTaskIds: new Set(s.tasks.filter(t => s.history[t.taskId]?.some(h => h.actedByName === name)).map(t => t.taskId)) }
+    : { kind: 'all' };
+  return { filters, scope };
 };
 const fail = (status: number, message: string) =>
   Promise.reject(Object.assign(new Error(message), { response: { status, data: { message } }, isAxiosError: true }));
@@ -50,6 +67,8 @@ function handle(method: string, path: string, q: URLSearchParams, body: Record<s
   // ── Reports ──
   if (method === 'get' && path === '/Report/analytics') {
     const c = (st: string) => s.tasks.filter(t => t.status === st).length;
+    const done = s.tasks.filter(t => t.completedAt);
+    const avgHours = done.length ? Math.round(done.reduce((sum, t) => sum + (Date.parse(t.completedAt!) - Date.parse(t.createdAt)) / 3600_000, 0) / done.length * 10) / 10 : 0;
     const perUser = s.users.filter(u => !u.isDeleted && u.roleId !== 4).map(u => {
       const mine = s.tasks.filter(t => t.assignedTo === u.userId);
       return { userName: u.name, pendingCount: mine.filter(t => t.status === 'Pending').length, inProgressCount: mine.filter(t => t.status === 'In Progress').length, completedCount: s.tasks.filter(t => t.status === 'Completed' && s.history[t.taskId]?.some(h => h.actedByName === u.name)).length };
@@ -58,8 +77,16 @@ function handle(method: string, path: string, q: URLSearchParams, body: Record<s
       totalUsers: s.users.filter(u => !u.isDeleted).length, totalWorkflows: s.workflows.length, activeWorkflows: s.workflows.filter(w => w.status === 'Active').length,
       pendingTasks: c('Pending'), inProgressTasks: c('In Progress'), completedTasks: c('Completed'),
       overdueTasks: s.tasks.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'Completed' && t.status !== 'Cancelled').length,
-      avgCompletionTimeHours: s.tasks.length ? 31.5 : 0, tasksPerUser: s.tasks.length ? perUser : [],
+      avgCompletionTimeHours: avgHours, tasksPerUser: s.tasks.length ? perUser : [],
     };
+  }
+  if (method === 'get' && path === '/Report/dashboard') {
+    const { filters, scope } = dashboardArgs(q, s);
+    return computeDashboard(s.tasks, s.users, s.workflows, CATEGORIES, filters, scope);
+  }
+  if (method === 'get' && path === '/Report/dashboard/export') {
+    const { filters, scope } = dashboardArgs(q, s);
+    return new Blob([tasksToCsv(s.tasks, filters, scope)], { type: 'text/csv' });
   }
   if (method === 'get' && path === '/Report/audit-logs') return page(s.audit.filter(contains(q, 'userName', 'action', 'entityName')), q, 'pageSize');
   if (method === 'get' && path === '/Report/audit-logs/export') return new Blob([csv(s.audit as unknown as Record<string, unknown>[])], { type: 'text/csv' });
@@ -124,6 +151,10 @@ function handle(method: string, path: string, q: URLSearchParams, body: Record<s
 export async function demoAdapter(config: InternalAxiosRequestConfig): Promise<AxiosResponse> {
   await sleep(120);
   const url = new URL(config.url || '/', 'http://demo.local');
+  // axios keeps `params` separate from the URL; a real server would see them as the query string
+  for (const [key, value] of Object.entries((config.params ?? {}) as Record<string, unknown>)) {
+    if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, String(value));
+  }
   let body: Record<string, any> = {}; // eslint-disable-line @typescript-eslint/no-explicit-any
   if (typeof config.data === 'string') { try { body = JSON.parse(config.data); } catch { /* not JSON */ } }
   else if (config.data && typeof config.data === 'object') body = config.data as Record<string, any>; // eslint-disable-line @typescript-eslint/no-explicit-any
