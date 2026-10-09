@@ -9,7 +9,6 @@ export interface AuditRow { userName: string; action: string; entityName: string
 const HOUR = 3600_000;
 const DAY = 24 * HOUR;
 const ago = (ms: number) => new Date(Date.now() - ms).toISOString();
-const ahead = (ms: number) => new Date(Date.now() + ms).toISOString();
 
 export const ROLES: { roleId: number; roleName: UserRole }[] = [
   { roleId: 1, roleName: 'Admin' },
@@ -62,48 +61,109 @@ const TITLES = [
   'Parental leave plan', 'Cloud spend exceptions', 'Offsite venue deposit', 'Security audit evidence', 'Contractor invoice 1042',
 ];
 
-function buildTasks(workflows: WorkflowDetail[]): TaskItem[] {
-  const assignees = [4, 5, 8, 2, 3, 4, 1, 4, 5, 2];
-  const statuses: TaskStatus[] = ['In Progress', 'Pending', 'Completed', 'In Progress', 'Rejected', 'In Progress', 'Cancelled', 'Pending', 'Completed', 'In Progress'];
-  const priorities: TaskPriority[] = ['High', 'Medium', 'Low', 'Medium', 'High', 'Low', 'Medium'];
-  return Array.from({ length: 78 }, (_, i) => {
+/** Small seeded LCG so the demo data is identical on every load. */
+function lcg(seed: number) {
+  let s = seed >>> 0;
+  return () => { s = (Math.imul(s, 1664525) + 1013904223) >>> 0; return s / 4294967296; };
+}
+
+const userName = (id: number) => userSeed.find(u => u[0] === id)![1];
+
+interface Draft {
+  status: TaskStatus; createdMs: number; spanDays: number; completedMs?: number; wf: WorkflowDetail; cat: TaskCategory;
+  priority: TaskPriority; owner: number; step: number; approvers: number[];
+}
+
+function buildTasks(workflows: WorkflowDetail[]): { tasks: TaskItem[]; history: Record<number, TaskStepHistory[]> } {
+  const rnd = lcg(20240607);
+  const now = Date.now();
+  const today = Math.floor(now / DAY) * DAY;
+  const pick = <T,>(arr: T[]) => arr[Math.floor(rnd() * arr.length)];
+  const owners = [4, 4, 4, 5, 5, 8, 8];
+  const drafts: Draft[] = [];
+
+  for (let i = 0; i < 240; i++) {
+    const roll = rnd();
+    let status: TaskStatus = roll < 0.55 ? 'Completed' : roll < 0.75 ? 'In Progress' : roll < 0.82 ? 'Pending' : roll < 0.92 ? 'Rejected' : 'Cancelled';
+    const open = status === 'In Progress' || status === 'Pending';
+
+    // Created date: weekdays are favoured; open tasks lean recent.
+    let dayOffset = 0;
+    for (let tries = 0; tries < 20; tries++) {
+      dayOffset = Math.floor(open ? rnd() ** 1.4 * 90 : rnd() * 150);
+      const dow = new Date(today - dayOffset * DAY).getUTCDay();
+      if ((dow !== 0 && dow !== 6) || rnd() < 0.35) break;
+    }
+    const createdMs = Math.min(today - dayOffset * DAY + (8 + rnd() * 10) * HOUR, now - 60_000);
+
+    // Work older than four weeks is rarely still open: keeps the overdue figures believable.
+    let slow = false;
+    if ((status === 'In Progress' || status === 'Pending') && (now - createdMs) / DAY > 28) {
+      status = rnd() < 0.85 ? 'Completed' : 'Cancelled';
+      slow = true; // finished long after creation, so it was still open in earlier periods
+    }
+
+    const onTime = slow ? rnd() < 0.5 : rnd() < 0.7;
+    const spanDays = onTime ? 3 + Math.floor(rnd() * 12) : 3 + Math.floor(rnd() * 4);
+    let completedMs: number | undefined;
+    if (status === 'Completed') {
+      const dur = onTime ? 0.5 + rnd() * (Math.min(9, spanDays) - 0.5) : spanDays + 0.2 + rnd() * (9 - spanDays - 0.2);
+      completedMs = slow ? Math.min(createdMs + (4 + rnd() * 22) * DAY, now - 6 * HOUR) : createdMs + dur * DAY;
+      if (completedMs > now) { status = 'In Progress'; completedMs = undefined; }
+    }
+
+    const wf = pick(workflows);
+    const len = wf.steps.length;
+    const step = status === 'Pending' ? 0
+      : status === 'Completed' ? len
+      : status === 'Rejected' ? 1 + Math.floor(rnd() * len)
+      : Math.floor(rnd() * (len + 1));
+    const approvers = [0, ...wf.steps.map(st => (st.approverRoleName === 'Admin' ? 1 : st.approverRoleName === 'Auditor' ? 6 : rnd() < 0.5 ? 2 : 3))];
+    drafts.push({ status, createdMs, spanDays, completedMs, wf, cat: pick(CATEGORIES), priority: pick<TaskPriority>(['High', 'Medium', 'Medium', 'Low']), owner: pick(owners), step, approvers });
+  }
+
+  drafts.sort((a, b) => b.createdMs - a.createdMs);
+  const history: Record<number, TaskStepHistory[]> = {};
+  const tasks = drafts.map((d, i): TaskItem => {
     const n = i + 1;
-    const wf = workflows[i % workflows.length];
-    const status = statuses[i % statuses.length];
-    const cat = CATEGORIES[i % CATEGORIES.length];
-    const assignee = userSeed.find(u => u[0] === assignees[i % assignees.length])!;
-    const done = status === 'Completed' || status === 'Cancelled' || status === 'Rejected';
-    const due = i % 7 === 0 ? ago((1 + (i % 5)) * DAY) : ahead(((i % 9) + 1) * DAY);
+    const len = d.wf.steps.length;
+    const awaiting = d.status === 'In Progress' || d.status === 'Pending';
+    const assignee = awaiting ? (d.step === 0 ? d.owner : d.approvers[d.step]) : d.owner;
+    const rejectedReason = d.status === 'Rejected' ? 'Missing supporting documents.' : undefined;
+
+    const rows: TaskStepHistory[] = [];
+    const end = d.completedMs ?? Math.min(now, d.createdMs + 3 * DAY);
+    const at = (j: number) => new Date(d.createdMs + ((j + 1) / (len + 2)) * (end - d.createdMs)).toISOString();
+    const done = d.status === 'Completed' ? len : d.step - 1;
+    for (let j = 0; j <= done; j++) {
+      rows.push(j === 0
+        ? { stepOrder: 0, actedByName: userName(d.owner), action: 'Completed', comment: 'Work finished, ready for review.', actedAt: at(0) }
+        : { stepOrder: j, actedByName: userName(d.approvers[j]), action: 'Approved', comment: j === 1 ? 'Looks good.' : undefined, actedAt: at(j) });
+    }
+    if (d.status === 'Rejected') rows.push({ stepOrder: d.step, actedByName: userName(d.approvers[d.step]), action: 'Rejected', comment: rejectedReason, actedAt: at(d.step) });
+    history[n] = rows;
+
     return {
       taskId: n,
       title: `${TITLES[i % TITLES.length]} #${n}`,
-      description: `Request ${n} submitted through the ${wf.title} workflow.`,
-      workflowId: wf.workflowId,
-      workflowTitle: wf.title,
-      assignedTo: done ? undefined : assignee[0],
-      assigneeName: done ? undefined : assignee[1],
-      status,
-      priority: priorities[i % priorities.length],
-      currentStepOrder: status === 'Pending' ? 0 : Math.min(1 + (i % 2), wf.steps.length),
-      rejectedReason: status === 'Rejected' ? 'Missing supporting documents.' : undefined,
-      dueDate: due,
-      completedAt: status === 'Completed' ? ago((i % 12) * DAY) : undefined,
-      createdAt: ago((3 + (i % 40)) * DAY),
-      categoryId: cat.categoryId,
-      categoryName: cat.name,
-      categoryColor: cat.colorHex,
+      description: `Request ${n} submitted through the ${d.wf.title} workflow.`,
+      workflowId: d.wf.workflowId,
+      workflowTitle: d.wf.title,
+      assignedTo: assignee,
+      assigneeName: userName(assignee),
+      status: d.status,
+      priority: d.priority,
+      currentStepOrder: d.step,
+      rejectedReason,
+      dueDate: new Date(d.createdMs + d.spanDays * DAY).toISOString(),
+      completedAt: d.completedMs ? new Date(d.completedMs).toISOString() : undefined,
+      createdAt: new Date(d.createdMs).toISOString(),
+      categoryId: d.cat.categoryId,
+      categoryName: d.cat.name,
+      categoryColor: d.cat.colorHex,
     };
   });
-}
-
-function historyFor(t: TaskItem): TaskStepHistory[] {
-  const rows: TaskStepHistory[] = [];
-  if (t.status === 'Pending') return rows;
-  rows.push({ stepOrder: 0, actedByName: 'Dan Patel', action: 'Completed', comment: 'Work finished, ready for review.', actedAt: ago(5 * DAY) });
-  if (t.currentStepOrder >= 2 || t.status === 'Completed') rows.push({ stepOrder: 1, actedByName: 'Bob Jones', action: 'Approved', comment: 'Looks good.', actedAt: ago(3 * DAY) });
-  if (t.status === 'Completed') rows.push({ stepOrder: 2, actedByName: 'Alice Smith', action: 'Approved', actedAt: ago(1 * DAY) });
-  if (t.status === 'Rejected') rows.push({ stepOrder: 1, actedByName: 'Bob Jones', action: 'Rejected', comment: t.rejectedReason, actedAt: ago(2 * DAY) });
-  return rows;
+  return { tasks, history };
 }
 
 function auditSeed(): AuditRow[] {
@@ -149,9 +209,7 @@ export function buildStore(empty: boolean): DemoStore {
     userId, name, email, roleId, role: roleOf(roleId), isDeleted, createdAt: ago(userId * 6 * DAY),
   }));
   const workflows = empty ? [] : workflowSeed();
-  const tasks = empty ? [] : buildTasks(workflowSeed());
-  const history: Record<number, TaskStepHistory[]> = {};
-  tasks.forEach(t => { history[t.taskId] = historyFor(t); });
+  const { tasks, history } = empty ? { tasks: [] as TaskItem[], history: {} as Record<number, TaskStepHistory[]> } : buildTasks(workflowSeed());
   return {
     users,
     workflows,
