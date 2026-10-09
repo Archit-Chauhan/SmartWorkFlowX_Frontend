@@ -256,9 +256,7 @@ const TaskList: React.FC = () => {
       {/* Header with tabs */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="page-title">
-            {activeTab === 'action' ? 'Action Center' : 'My Activity'}
-          </h2>
+          <h1 className="sr-only">My Tasks</h1>
           <p className="caption">
             {activeTab === 'action'
               ? `${actionTotal} task${actionTotal !== 1 ? 's' : ''} assigned to you`

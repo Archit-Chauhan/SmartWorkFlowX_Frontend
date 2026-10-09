@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../../api/axiosInstance';
-import { History, ShieldCheck, User, Calendar, Activity, Download, Search } from 'lucide-react';
+import { ShieldCheck, User, Calendar, Activity, Download, Search } from 'lucide-react';
 import Pagination from '../../components/Pagination';
 import EmptyState from '../../components/EmptyState';
 import type { PaginatedResponse } from '../../models';
@@ -77,9 +77,7 @@ const AuditLog: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="page-title flex items-center gap-2">
-            <History className="text-ink-subtle" /> System Audit Trail
-          </h2>
+          <h1 className="sr-only">Audit Logs</h1>
           <p className="caption text-left">Immutable record of all system modifications and access</p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">

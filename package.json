@@ -12,6 +12,8 @@
     "test:run": "vitest run"
   },
   "dependencies": {
+    "@dicebear/core": "^9.4.3",
+    "@dicebear/notionists-neutral": "^9.4.2",
     "@hookform/resolvers": "^5.2.2",
     "@marsidev/react-turnstile": "^1.5.2",
     "@microsoft/signalr": "^10.0.0",

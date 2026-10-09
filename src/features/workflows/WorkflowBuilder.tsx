@@ -231,6 +231,7 @@ const WorkflowBuilder: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto space-y-6">
+      <h1 className="sr-only">Workflows</h1>
       {/* ── Create / Edit Form ─────────────────────────────── */}
       <div className="card card-pad">
         <h2 className="section-title flex items-center gap-2 mb-5">

@@ -24,3 +24,9 @@ Downloaded but not used: `page_not_found_2.svg` (alternative 404).
 ## Logo and favicon
 
 The Fork X mark (`src/assets/Logo.tsx`, `public/favicon.svg`) was drawn for this project.
+
+## User avatars
+
+Generated in the browser with DiceBear (`@dicebear/core` and `@dicebear/notionists-neutral`, both MIT). The artwork is the "Notionists" design by Zoish, licensed CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/), remixed by DiceBear. Avatars are derived from the user's email as a seed; nothing is sent to DiceBear's web service.
+
+We use the single style package instead of `@dicebear/collection` because the collection depends on `@dicebear/initials`, which has an open SVG-injection advisory (GHSA-gcr2-9v8m-gq45) that only applies when untrusted values are passed as style options. We pass only a seed.

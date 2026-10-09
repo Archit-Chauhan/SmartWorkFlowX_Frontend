@@ -48,8 +48,8 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="page-title">System Overview</h2>
-        <p className="text-ink-muted mt-1">Welcome back! Here's what's happening in SmartWorkFlowX today.</p>
+        <h1 className="sr-only">Dashboard</h1>
+        <p className="text-ink-muted">Welcome back! Here's what's happening in SmartWorkFlowX today.</p>
       </div>
 
       {/* Overdue Alert Banner */}

@@ -34,7 +34,7 @@ describe('UserManagement Component', () => {
   it('TC-U01: renders correctly and fetches paginated user list on mount', async () => {
     render(<UserManagement />);
 
-    expect(screen.getByText('User Management')).toBeInTheDocument();
+    expect(screen.getByText('Manage Users')).toBeInTheDocument();
     expect(screen.getByText('Loading users...')).toBeInTheDocument();
 
     await waitFor(() => {

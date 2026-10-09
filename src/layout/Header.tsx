@@ -1,23 +1,24 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Bell, CheckCheck, Menu, KeyRound } from 'lucide-react';
+import { Bell, CheckCheck, Menu } from 'lucide-react';
 import { useNotificationHub } from '../hooks/useNotificationHub';
 import axiosInstance from '../api/axiosInstance';
 import type { Notification, NotificationPaginatedResponse } from '../models';
-import ChangePasswordModal from '../components/ChangePasswordModal';
+import UserAvatar from '../components/UserAvatar';
 import ThemeToggle from '../components/ThemeToggle';
+import Breadcrumbs from '../components/Breadcrumbs';
+import { LogoMark } from '../assets/Logo';
 
 interface HeaderProps {
   onMenuClick: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
-  const { user, role, logout } = useAuth();
+  const { user, role } = useAuth();
   const { unreadCount, clearUnread } = useNotificationHub();
 
   const [showBell, setShowBell] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [showChangePassword, setShowChangePassword] = useState(false);
   const bellRef = useRef<HTMLDivElement>(null);
 
   // Load notifications when bell opens
@@ -49,15 +50,17 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
 
   return (
     <header className="bg-canvas border-b border-hairline h-14 flex items-center justify-between px-4 sm:px-6 shrink-0">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 min-w-0">
         <button 
           onClick={onMenuClick}
+          aria-label="Open menu"
           className="btn btn-ghost !px-2 md:hidden"
         >
           <Menu size={20} />
         </button>
-        <h1 className="section-title hidden sm:block">SmartWorkFlowX</h1>
-        <h1 className="section-title sm:hidden">SWFX</h1>
+        {/* The brand lives in the sidebar on desktop; on mobile the drawer is closed, so show the mark only */}
+        <LogoMark className="h-6 w-6 text-ink md:hidden shrink-0" />
+        <Breadcrumbs />
       </div>
 
       <div className="flex items-center gap-2 sm:gap-4">
@@ -69,6 +72,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
             onClick={openBell}
             className="btn btn-ghost !px-2 relative"
             title="Notifications"
+            aria-label="Notifications"
           >
             <Bell size={18} />
             {unreadCount > 0 && (
@@ -115,38 +119,15 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
 
         <div className="h-6 w-px bg-hairline" />
 
-        {/* User Info */}
-        <div className="flex flex-col text-right hidden sm:flex">
-          <span className="text-sm font-medium text-ink">{user?.email}</span>
-          <span className="text-xs text-accent font-semibold">{role}</span>
+        {/* User info: change password and logout live in the sidebar */}
+        <div className="flex items-center gap-3">
+          <UserAvatar seed={user?.email ?? 'guest'} size={32} />
+          <div className="hidden sm:flex flex-col text-left leading-tight">
+            <span className="text-sm font-medium text-ink">{user?.email}</span>
+            <span className="text-xs text-accent font-semibold">{role}</span>
+          </div>
         </div>
-
-        <div className="h-6 w-px bg-hairline hidden sm:block" />
-
-        <button
-          onClick={() => setShowChangePassword(true)}
-          className="btn btn-ghost"
-          title="Change Password"
-        >
-          <KeyRound size={18} />
-          <span className="text-sm font-medium hidden sm:inline">Change Password</span>
-        </button>
-
-        <div className="h-6 w-px bg-hairline hidden sm:block" />
-
-        <button
-          onClick={logout}
-          className="btn btn-ghost hover:!text-error"
-          title="Logout"
-        >
-          <LogOut size={18} />
-          <span className="text-sm font-medium hidden sm:inline">Logout</span>
-        </button>
       </div>
-
-      {showChangePassword && (
-        <ChangePasswordModal onClose={() => setShowChangePassword(false)} />
-      )}
     </header>
   );
 };
