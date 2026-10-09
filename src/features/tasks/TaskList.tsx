@@ -6,6 +6,7 @@ import {
   ChevronDown, ChevronUp, RotateCcw, Flag, Activity
 } from 'lucide-react';
 import Pagination from '../../components/Pagination';
+import EmptyState from '../../components/EmptyState';
 
 const PRIORITY_STYLES: Record<string, string> = {
   High:   'chip-rejected',
@@ -305,20 +306,11 @@ const TaskList: React.FC = () => {
           <Clock size={20} className="animate-spin mr-2" /> Loading tasks...
         </div>
       ) : currentList.length === 0 ? (
-        <div className="empty-state">
-          {activeTab === 'action' ? (
-            <>
-              <CheckCircle size={40} className="mx-auto mb-3 text-success" />
-              <p className="font-medium">All clear! No tasks assigned to you.</p>
-            </>
-          ) : (
-            <>
-              <Activity size={40} className="mx-auto mb-3 text-ink-subtle" />
-              <p className="font-medium">No activity yet.</p>
-              <p className="text-sm mt-1">Tasks you complete or approve will appear here.</p>
-            </>
-          )}
-        </div>
+        activeTab === 'action' ? (
+          <EmptyState illustration="task-list" title="All clear! No tasks assigned to you." hint="New work shows up here as soon as it is assigned." />
+        ) : (
+          <EmptyState illustration="empty" title="No activity yet." hint="Tasks you complete or approve will appear here." />
+        )
       ) : (
         <div className="space-y-3">
           {currentList.map(task => renderTaskCard(task, activeTab === 'action'))}

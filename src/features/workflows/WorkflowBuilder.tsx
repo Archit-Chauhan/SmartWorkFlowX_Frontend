@@ -9,6 +9,7 @@ import {
   Copy, Power, PowerOff, ChevronUp, AlertCircle, Sparkles
 } from 'lucide-react';
 import Pagination from '../../components/Pagination';
+import EmptyState from '../../components/EmptyState';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -394,7 +395,7 @@ const WorkflowBuilder: React.FC = () => {
         {loading ? (
           <div className="empty-state">Loading...</div>
         ) : workflows.length === 0 ? (
-          <div className="empty-state">No workflows yet. Create one above.</div>
+          <EmptyState illustration="process" title="No workflows yet. Create one above." hint="A workflow defines the approval steps a task moves through." />
         ) : (
           <div className="divide-y divide-hairline">
             {workflows.map(wf => (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import ThemeToggle from '../../components/ThemeToggle';
+import PublicLayout from '../../components/PublicLayout';
 import { LogoMark } from '../../assets/Logo';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
@@ -78,8 +78,7 @@ const ResetPassword: React.FC = () => {
 
   if (!email || !token) {
     return (
-      <div className="min-h-screen flex items-center justify-center relative bg-surface-1 py-12 px-4">
-        <div className="absolute top-4 right-4"><ThemeToggle /></div>
+      <PublicLayout illustration="access-denied" headline="This link is no longer valid" text="Reset links expire for your security. Request a new one to continue.">
         <div className="w-full max-w-[400px] space-y-6 card card-pad text-center">
           <AlertCircle className="mx-auto text-error mb-4" size={48} />
           <h2 className="text-xl font-semibold text-ink">Invalid Link</h2>
@@ -91,13 +90,12 @@ const ResetPassword: React.FC = () => {
             Request New Link
           </button>
         </div>
-      </div>
+      </PublicLayout>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative bg-surface-1 py-12 px-4">
-      <div className="absolute top-4 right-4"><ThemeToggle /></div>
+    <PublicLayout illustration="reset-password" headline="Choose a strong new password" text="Use at least six characters. You will sign in with it straight away.">
       <div className="w-full max-w-[400px] space-y-6 card card-pad">
         <div>
           <LogoMark className="h-10 w-10 mx-auto mb-3 text-ink" />
@@ -185,7 +183,7 @@ const ResetPassword: React.FC = () => {
           )}
         </form>
       </div>
-    </div>
+    </PublicLayout>
   );
 };
 

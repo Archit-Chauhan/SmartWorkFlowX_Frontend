@@ -15,6 +15,7 @@ import WorkflowBuilder from '../features/workflows/WorkflowBuilder';
 import UserManagement from '../features/auth/UserManagement';
 import AuditLog from '../features/reports/AuditLog';
 import AllTasks from '../features/tasks/AllTasks';
+import NotFound from '../features/NotFound';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -67,7 +68,7 @@ const AppRoutes: React.FC = () => {
         } />
       </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };
