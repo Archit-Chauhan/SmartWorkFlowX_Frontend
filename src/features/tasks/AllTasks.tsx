@@ -254,7 +254,7 @@ const AllTasks: React.FC = () => {
                   ) : (
                     <div className="space-y-2">
                       {(history[task.taskId] ?? []).map((h, i) => (
-                        <div key={i} className="flex items-center gap-3 text-sm">
+                        <div key={i} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm [&>span]:whitespace-nowrap [&>span:nth-child(5)]:whitespace-normal">
                           <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
                             h.action === 'Approved' || h.action === 'Completed' ? 'bg-surface-2 text-success' : 'bg-surface-2 text-error'
                           }`}>

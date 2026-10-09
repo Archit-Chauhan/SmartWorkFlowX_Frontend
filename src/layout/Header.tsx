@@ -79,7 +79,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           </button>
 
           {showBell && (
-            <div className="absolute right-0 top-12 w-80 bg-canvas rounded-card shadow-xl border border-hairline z-50 overflow-hidden">
+            <div className="fixed left-4 right-4 top-14 sm:absolute sm:left-auto sm:right-0 sm:top-12 sm:w-80 bg-canvas rounded-card shadow-xl border border-hairline z-50 overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3 border-b border-hairline">
                 <span className="font-semibold text-ink text-sm">Notifications</span>
                 {notifications.some(n => !n.isRead) && (

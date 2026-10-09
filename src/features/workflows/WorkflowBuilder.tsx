@@ -340,7 +340,7 @@ const WorkflowBuilder: React.FC = () => {
 
                 <div className="flex flex-col sm:flex-row gap-3">
                   <input
-                    className="input flex-1 min-w-0"
+                    className="input sm:flex-1 min-w-0"
                     placeholder="Instructions for approver (optional)"
                     {...register(`steps.${idx}.description`)}
                   />
