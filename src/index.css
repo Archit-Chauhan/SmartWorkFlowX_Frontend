@@ -1,1 +1,272 @@
 @import "tailwindcss";
+
+/*
+ * SmartWorkFlowX design tokens
+ * Sources: Linear (dark surface ladder, single accent, 8px controls),
+ *          IBM Carbon (light theme, semantic colors, Plex type, forms),
+ *          Sentry (chart series colors, violet-tinted dark ink, code block).
+ * Rules: one brand accent; status colors never reuse the accent; borders over shadows.
+ * Theme: light by default; dark via [data-theme="dark"] or the OS setting when unset.
+ */
+
+/* Class-based dark variant so `dark:` utilities follow the theme toggle */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+:root {
+  /* Brand accent: primary actions, selection, focus, links only (Linear lavender) */
+  --accent: #5e6ad2;
+  --accent-hover: #4f5bc4;      /* derived: darker than accent for light backgrounds */
+  --accent-soft: #eceefb;       /* derived: tinted selection/hover background */
+  --on-accent: #ffffff;
+
+  /* Surfaces (IBM Carbon light) */
+  --canvas: #ffffff;
+  --surface-1: #f4f4f4;
+  --surface-2: #e0e0e0;
+  --hairline: #e0e0e0;
+  --hairline-strong: #c6c6c6;
+
+  /* Text (IBM Carbon) */
+  --ink: #161616;
+  --ink-muted: #525252;
+  --ink-subtle: #8c8c8c;
+
+  /* Status: fixed meaning, independent of the brand accent (IBM Carbon semantics) */
+  --success: #24a148;
+  --warning: #f1c21b;
+  --error: #da1e28;
+  --info: #0f62fe;
+
+  /* Task status chips (derived from semantics) */
+  --status-pending: #8c8c8c;
+  --status-progress: #0f62fe;
+  --status-completed: #24a148;
+  --status-rejected: #da1e28;
+
+  /* Chart series (Sentry accents + accent), validated per theme below */
+  --chart-1: #5e6ad2;
+  --chart-2: #fa7faa;
+  --chart-3: #6a5fc1;
+  --chart-4: #24a148;
+  --chart-5: #f1c21b;
+
+  --focus-ring: #5e6ad2;
+  --overlay: rgb(0 0 0 / 0.5);
+
+  /* Sidebar stays dark in both themes (Carbon side-nav / Linear) */
+  --sidebar-bg: #161616;
+  --sidebar-ink: #c6c6c6;
+  --sidebar-ink-strong: #ffffff;
+  --sidebar-hover: #262626;
+  --sidebar-border: #393939;
+}
+
+/* Dark theme (Linear surface ladder). Applied by toggle, or by OS when no theme is chosen. */
+:root[data-theme="dark"] {
+  --accent: #5e6ad2;
+  --accent-hover: #828fff;
+  --accent-soft: #1b1d33;       /* derived */
+  --on-accent: #ffffff;
+
+  --canvas: #010102;
+  --surface-1: #0f1011;
+  --surface-2: #141516;
+  --hairline: #23252a;
+  --hairline-strong: #34343a;
+
+  --ink: #f7f8f8;
+  --ink-muted: #d0d6e0;
+  --ink-subtle: #8a8f98;
+
+  --success: #27a644;
+  --warning: #f1c21b;
+  --error: #ff6b6b;             /* derived: #da1e28 is too dark on near-black */
+  --info: #78a9ff;              /* derived: lighter blue for contrast on dark */
+
+  --status-pending: #8a8f98;
+  --status-progress: #78a9ff;
+  --status-completed: #27a644;
+  --status-rejected: #ff6b6b;
+
+  --chart-1: #828fff;
+  --chart-2: #fa7faa;
+  --chart-3: #6a5fc1;
+  --chart-4: #c2ef4e;
+  --chart-5: #f1c21b;
+
+  --focus-ring: #9dc1f5;
+  --overlay: rgb(0 0 0 / 0.7);
+
+  --sidebar-bg: #0f1011;
+  --sidebar-ink: #8a8f98;
+  --sidebar-ink-strong: #f7f8f8;
+  --sidebar-hover: #18191a;
+  --sidebar-border: #23252a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    --accent-hover: #828fff;
+    --accent-soft: #1b1d33;
+    --canvas: #010102;
+    --surface-1: #0f1011;
+    --surface-2: #141516;
+    --hairline: #23252a;
+    --hairline-strong: #34343a;
+    --ink: #f7f8f8;
+    --ink-muted: #d0d6e0;
+    --ink-subtle: #8a8f98;
+    --success: #27a644;
+    --error: #ff6b6b;
+    --info: #78a9ff;
+    --status-pending: #8a8f98;
+    --status-progress: #78a9ff;
+    --status-completed: #27a644;
+    --status-rejected: #ff6b6b;
+    --chart-1: #828fff;
+    --chart-4: #c2ef4e;
+    --focus-ring: #9dc1f5;
+    --overlay: rgb(0 0 0 / 0.7);
+    --sidebar-bg: #0f1011;
+    --sidebar-ink: #8a8f98;
+    --sidebar-ink-strong: #f7f8f8;
+    --sidebar-hover: #18191a;
+    --sidebar-border: #23252a;
+  }
+}
+
+/* Expose tokens as Tailwind utilities: bg-canvas, text-ink-muted, border-hairline, rounded-control ... */
+@theme inline {
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-canvas: var(--canvas);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-hairline: var(--hairline);
+  --color-hairline-strong: var(--hairline-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-info: var(--info);
+  --color-status-pending: var(--status-pending);
+  --color-status-progress: var(--status-progress);
+  --color-status-completed: var(--status-completed);
+  --color-status-rejected: var(--status-rejected);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar-bg);
+  --color-sidebar-ink: var(--sidebar-ink);
+  --color-sidebar-ink-strong: var(--sidebar-ink-strong);
+  --color-sidebar-hover: var(--sidebar-hover);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-overlay: var(--overlay);
+  --color-focus-ring: var(--focus-ring);
+
+  --font-sans: "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Radius: between Carbon (0) and Linear (8-12) */
+  --radius-control: 4px;   /* buttons, inputs, chips */
+  --radius-card: 6px;      /* cards, panels, modals */
+  --radius-pill: 9999px;   /* status pills, avatars only */
+
+  /* Spacing is Tailwind's 4px base grid, shared by all three systems */
+  --spacing-row: 2.25rem;       /* 36px compact table row / control height */
+  --spacing-control: 2.5rem;    /* 40px default button and input height */
+}
+
+/* ---------- Base ---------- */
+@layer base {
+  html { color-scheme: light; }
+  html[data-theme="dark"] { color-scheme: dark; }
+  body {
+    background-color: var(--canvas);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.43;
+    letter-spacing: 0.16px;
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+  ::selection { background: var(--accent-soft); }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+}
+
+/* ---------- Shared components (see docs/UI_REVAMP_SPEC.md section 3) ---------- */
+@layer components {
+  /* Typography roles */
+  .page-title { font-size: 24px; line-height: 1.25; font-weight: 600; color: var(--ink); letter-spacing: 0; }
+  .section-title { font-size: 16px; line-height: 1.4; font-weight: 600; color: var(--ink); letter-spacing: 0; }
+  .caption { font-size: 12px; line-height: 1.33; color: var(--ink-muted); letter-spacing: 0.32px; }
+
+  /* Buttons */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 h-control px-4 rounded-control text-sm font-medium
+           border border-transparent cursor-pointer select-none whitespace-nowrap transition-colors duration-150;
+  }
+  .btn:disabled, .btn[aria-disabled="true"] { opacity: 0.5; cursor: not-allowed; }
+  .btn-sm { @apply h-row px-3 text-xs; }
+  .btn-primary { @apply bg-accent text-on-accent; }
+  .btn-primary:hover:not(:disabled) { @apply bg-accent-hover; }
+  .btn-secondary { @apply bg-surface-1 text-ink border-hairline-strong; }
+  .btn-secondary:hover:not(:disabled) { @apply bg-surface-2; }
+  .btn-danger { @apply bg-error text-white; }
+  .btn-danger:hover:not(:disabled) { filter: brightness(0.92); }
+  .btn-ghost { @apply bg-transparent text-ink-muted; }
+  .btn-ghost:hover:not(:disabled) { @apply bg-surface-1 text-ink; }
+
+  /* Form controls */
+  .label { @apply block mb-1 text-xs font-medium text-ink-muted; }
+  .input {
+    @apply block w-full h-control px-3 rounded-control bg-surface-1 text-ink text-sm
+           border border-hairline placeholder:text-ink-subtle transition-colors duration-150;
+  }
+  textarea.input { height: auto; padding-top: 8px; padding-bottom: 8px; }
+  .input:hover { border-color: var(--hairline-strong); }
+  .input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .input:disabled { opacity: 0.6; cursor: not-allowed; }
+  .input-error, .input-error:focus { border-color: var(--error); box-shadow: 0 0 0 1px var(--error); }
+  .field-error { @apply mt-1 text-xs text-error; }
+
+  /* Surfaces */
+  .card { @apply bg-canvas border border-hairline rounded-card; }
+  .card-pad { @apply p-6; }
+  .empty-state { @apply py-12 text-center text-sm text-ink-subtle; }
+
+  /* Tables */
+  .table { @apply w-full text-sm text-left border-collapse; }
+  .table thead th {
+    @apply h-row px-4 text-xs font-semibold text-ink-muted bg-surface-1 border-b border-hairline whitespace-nowrap;
+  }
+  .table tbody td { @apply h-row px-4 py-2 text-ink border-b border-hairline align-middle; }
+  .table tbody tr:hover td { background-color: var(--surface-1); }
+  .table tbody tr:last-child td { border-bottom: 0; }
+
+  /* Chips (status and priority pills) */
+  .chip {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-pill text-xs font-medium whitespace-nowrap
+           bg-surface-2 text-ink-muted;
+  }
+  .chip-pending   { background: color-mix(in srgb, var(--status-pending) 16%, transparent);   color: var(--ink-muted); }
+  .chip-progress  { background: color-mix(in srgb, var(--status-progress) 16%, transparent);  color: var(--status-progress); }
+  .chip-completed { background: color-mix(in srgb, var(--status-completed) 16%, transparent); color: var(--status-completed); }
+  .chip-rejected  { background: color-mix(in srgb, var(--status-rejected) 16%, transparent);  color: var(--status-rejected); }
+  .chip-warning   { background: color-mix(in srgb, var(--warning) 22%, transparent);          color: var(--ink); }
+  .chip-neutral   { @apply bg-surface-2 text-ink-muted; }
+
+  /* Inline alerts */
+  .alert { @apply px-3 py-2 rounded-control text-sm border; }
+  .alert-error   { background: color-mix(in srgb, var(--error) 10%, transparent);   border-color: var(--error);   color: var(--error); }
+  .alert-success { background: color-mix(in srgb, var(--success) 10%, transparent); border-color: var(--success); color: var(--success); }
+  .alert-info    { background: color-mix(in srgb, var(--info) 10%, transparent);    border-color: var(--info);    color: var(--info); }
+}

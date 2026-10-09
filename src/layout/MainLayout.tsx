@@ -8,7 +8,7 @@ const MainLayout: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden relative">
+    <div className="flex h-screen bg-surface-1 overflow-hidden relative">
       {/* Sidebar - Mobile Drawer & Desktop Fixed */}
       <Sidebar isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
 

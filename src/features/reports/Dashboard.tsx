@@ -28,18 +28,18 @@ const Dashboard: React.FC = () => {
   }, []);
 
   if (loading) return (
-    <div className="flex justify-center items-center h-64 text-gray-400">
+    <div className="flex justify-center items-center h-64 text-ink-subtle">
       <Activity size={20} className="animate-pulse mr-2" /> Loading Dashboard...
     </div>
   );
 
   const primaryCards = [
-    { label: 'Total Users',       value: stats?.totalUsers ?? 0,       icon: <Users size={20} className="text-blue-600" />,    color: 'bg-blue-50',   border: 'border-blue-100' },
-    { label: 'Active Workflows',  value: stats?.activeWorkflows ?? 0,  icon: <GitBranch size={20} className="text-purple-600" />, color: 'bg-purple-50', border: 'border-purple-100' },
-    { label: 'In Progress Tasks', value: stats?.inProgressTasks ?? 0,  icon: <Clock size={20} className="text-blue-500" />,    color: 'bg-blue-50',   border: 'border-blue-100' },
-    { label: 'Completed Tasks',   value: stats?.completedTasks ?? 0,   icon: <CheckCircle size={20} className="text-green-600" />, color: 'bg-green-50', border: 'border-green-100' },
-    { label: 'Pending Tasks',     value: stats?.pendingTasks ?? 0,     icon: <Timer size={20} className="text-yellow-600" />,  color: 'bg-yellow-50', border: 'border-yellow-100' },
-    { label: 'Overdue Tasks',     value: stats?.overdueTasks ?? 0,     icon: <AlertTriangle size={20} className="text-red-500" />, color: 'bg-red-50',  border: 'border-red-100' },
+    { label: 'Total Users',       value: stats?.totalUsers ?? 0,       icon: <Users size={20} className="text-ink-subtle" /> },
+    { label: 'Active Workflows',  value: stats?.activeWorkflows ?? 0,  icon: <GitBranch size={20} className="text-ink-subtle" /> },
+    { label: 'In Progress Tasks', value: stats?.inProgressTasks ?? 0,  icon: <Clock size={20} className="text-ink-subtle" /> },
+    { label: 'Completed Tasks',   value: stats?.completedTasks ?? 0,   icon: <CheckCircle size={20} className="text-ink-subtle" /> },
+    { label: 'Pending Tasks',     value: stats?.pendingTasks ?? 0,     icon: <Timer size={20} className="text-ink-subtle" /> },
+    { label: 'Overdue Tasks',     value: stats?.overdueTasks ?? 0,     icon: <AlertTriangle size={20} className="text-ink-subtle" /> },
   ];
 
   const totalTasks = (stats?.pendingTasks ?? 0) + (stats?.inProgressTasks ?? 0) + (stats?.completedTasks ?? 0);
@@ -48,19 +48,19 @@ const Dashboard: React.FC = () => {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="text-2xl font-bold text-gray-800">System Overview</h2>
-        <p className="text-gray-500 mt-1">Welcome back! Here's what's happening in SmartWorkFlowX today.</p>
+        <h2 className="page-title">System Overview</h2>
+        <p className="text-ink-muted mt-1">Welcome back! Here's what's happening in SmartWorkFlowX today.</p>
       </div>
 
       {/* Overdue Alert Banner */}
       {(stats?.overdueTasks ?? 0) > 0 && (
-        <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-5 py-4">
-          <AlertTriangle size={20} className="text-red-500 flex-shrink-0" />
+        <div className="alert alert-error flex items-center gap-3">
+          <AlertTriangle size={20} className="flex-shrink-0" />
           <div>
-            <p className="text-sm font-semibold text-red-700">
+            <p className="text-sm font-semibold">
               {stats!.overdueTasks} task{stats!.overdueTasks > 1 ? 's are' : ' is'} overdue
             </p>
-            <p className="text-xs text-red-500 mt-0.5">These tasks have passed their due date and are still in progress.</p>
+            <p className="text-xs mt-0.5">These tasks have passed their due date and are still in progress.</p>
           </div>
         </div>
       )}
@@ -68,47 +68,45 @@ const Dashboard: React.FC = () => {
       {/* Primary Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         {primaryCards.map((stat, idx) => (
-          <div key={idx} className={`bg-white p-5 rounded-xl shadow-sm border ${stat.border} flex items-center gap-4`}>
-            <div className={`p-3 rounded-xl ${stat.color}`}>
-              {stat.icon}
-            </div>
+          <div key={idx} className="card card-pad flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm text-gray-500 font-medium">{stat.label}</p>
-              <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+              <p className="caption">{stat.label}</p>
+              <p className="text-2xl font-semibold text-ink mt-1">{stat.value}</p>
             </div>
+            {stat.icon}
           </div>
         ))}
       </div>
 
       {/* Task Status Distribution */}
       {totalTasks > 0 && (
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100">
+        <div className="card card-pad">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-semibold text-gray-800">Task Distribution</h3>
-            <span className="text-sm font-bold text-gray-900">{completionRate}% complete</span>
+            <h3 className="section-title">Task Distribution</h3>
+            <span className="text-sm font-semibold text-ink">{completionRate}% complete</span>
           </div>
-          <div className="flex h-3 rounded-full overflow-hidden gap-px">
+          <div className="flex h-3 rounded-pill overflow-hidden gap-px">
             {(stats?.completedTasks ?? 0) > 0 && (
-              <div className="bg-green-500 transition-all" style={{ width: `${Math.round(((stats?.completedTasks ?? 0) / totalTasks) * 100)}%` }} />
+              <div className="bg-status-completed transition-all" style={{ width: `${Math.round(((stats?.completedTasks ?? 0) / totalTasks) * 100)}%` }} />
             )}
             {(stats?.inProgressTasks ?? 0) > 0 && (
-              <div className="bg-blue-500 transition-all" style={{ width: `${Math.round(((stats?.inProgressTasks ?? 0) / totalTasks) * 100)}%` }} />
+              <div className="bg-status-progress transition-all" style={{ width: `${Math.round(((stats?.inProgressTasks ?? 0) / totalTasks) * 100)}%` }} />
             )}
             {(stats?.pendingTasks ?? 0) > 0 && (
-              <div className="bg-yellow-400 transition-all" style={{ width: `${Math.round(((stats?.pendingTasks ?? 0) / totalTasks) * 100)}%` }} />
+              <div className="bg-status-pending transition-all" style={{ width: `${Math.round(((stats?.pendingTasks ?? 0) / totalTasks) * 100)}%` }} />
             )}
           </div>
           <div className="flex flex-wrap gap-4 mt-3">
-            <span className="flex items-center gap-1.5 text-xs text-gray-500">
-              <span className="w-2.5 h-2.5 rounded-full bg-green-500 inline-block" />
+            <span className="flex items-center gap-1.5 caption">
+              <span className="w-2.5 h-2.5 rounded-pill bg-status-completed inline-block" />
               Completed ({stats?.completedTasks ?? 0})
             </span>
-            <span className="flex items-center gap-1.5 text-xs text-gray-500">
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" />
+            <span className="flex items-center gap-1.5 caption">
+              <span className="w-2.5 h-2.5 rounded-pill bg-status-progress inline-block" />
               In Progress ({stats?.inProgressTasks ?? 0})
             </span>
-            <span className="flex items-center gap-1.5 text-xs text-gray-500">
-              <span className="w-2.5 h-2.5 rounded-full bg-yellow-400 inline-block" />
+            <span className="flex items-center gap-1.5 caption">
+              <span className="w-2.5 h-2.5 rounded-pill bg-status-pending inline-block" />
               Pending ({stats?.pendingTasks ?? 0})
             </span>
           </div>
@@ -117,59 +115,55 @@ const Dashboard: React.FC = () => {
 
       {/* Avg Completion Time + Overdue Alert */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-indigo-50">
-            <BarChart2 size={20} className="text-indigo-600" />
-          </div>
+        <div className="card card-pad flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm text-gray-500 font-medium">Avg Completion Time</p>
-            <p className="text-2xl font-bold text-gray-900">
+            <p className="caption">Avg Completion Time</p>
+            <p className="text-2xl font-semibold text-ink mt-1">
               {stats?.avgCompletionTimeHours
                 ? `${stats.avgCompletionTimeHours}h`
                 : '—'}
             </p>
           </div>
+          <BarChart2 size={20} className="text-ink-subtle" />
         </div>
 
-        <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-amber-50">
-            <GitBranch size={20} className="text-amber-600" />
-          </div>
+        <div className="card card-pad flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm text-gray-500 font-medium">Total Workflows</p>
-            <p className="text-2xl font-bold text-gray-900">{stats?.totalWorkflows ?? 0}</p>
-            <p className="text-xs text-gray-400">{stats?.activeWorkflows ?? 0} active</p>
+            <p className="caption">Total Workflows</p>
+            <p className="text-2xl font-semibold text-ink mt-1">{stats?.totalWorkflows ?? 0}</p>
+            <p className="text-xs text-ink-subtle">{stats?.activeWorkflows ?? 0} active</p>
           </div>
+          <GitBranch size={20} className="text-ink-subtle" />
         </div>
       </div>
 
       {/* Per-User Breakdown */}
       {stats && stats.tasksPerUser.length > 0 && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-            <h3 className="font-semibold text-gray-800">Tasks Per User</h3>
-            <span className="text-xs text-gray-400">{stats.tasksPerUser.length} users with tasks</span>
+        <div className="card overflow-hidden">
+          <div className="px-6 py-4 border-b border-hairline flex items-center justify-between">
+            <h3 className="section-title">Tasks Per User</h3>
+            <span className="caption">{stats.tasksPerUser.length} users with tasks</span>
           </div>
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y divide-hairline">
             {stats.tasksPerUser.map((u, i) => (
               <div key={i} className="px-6 py-3 flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-4">
-                <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-bold text-gray-600 flex-shrink-0">
+                <div className="w-8 h-8 rounded-pill bg-surface-2 flex items-center justify-center text-sm font-semibold text-ink-muted flex-shrink-0">
                   {(u.userName || 'U').charAt(0).toUpperCase()}
                 </div>
-                <span className="flex-1 min-w-[120px] font-medium text-gray-700 text-sm truncate">{u.userName || 'Unknown User'}</span>
+                <span className="flex-1 min-w-[120px] font-medium text-ink text-sm truncate">{u.userName || 'Unknown User'}</span>
                 <div className="flex flex-wrap gap-2 sm:gap-3 text-xs w-full sm:w-auto">
                   {u.pendingCount > 0 && (
-                    <span className="bg-yellow-50 text-yellow-700 px-2 py-1 rounded-full font-semibold">
+                    <span className="chip chip-pending">
                       {u.pendingCount} pending
                     </span>
                   )}
                   {u.inProgressCount > 0 && (
-                    <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-full font-semibold">
+                    <span className="chip chip-progress">
                       {u.inProgressCount} in progress
                     </span>
                   )}
                   {u.completedCount > 0 && (
-                    <span className="bg-green-50 text-green-700 px-2 py-1 rounded-full font-semibold">
+                    <span className="chip chip-completed">
                       {u.completedCount} done
                     </span>
                   )}
@@ -182,50 +176,50 @@ const Dashboard: React.FC = () => {
 
       {/* Admin/Manager Quick Actions */}
       {(role === 'Admin' || role === 'Manager') && (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
+        <div className="card card-pad">
+          <h3 className="section-title mb-4">Quick Actions</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {role === 'Admin' && (
               <Link to="/users"
-                className="flex items-center gap-4 p-4 border border-blue-100 rounded-xl hover:bg-blue-50 transition-colors group">
-                <div className="bg-blue-100 p-2 rounded-lg group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                className="flex items-center gap-4 p-4 border border-hairline rounded-card hover:bg-surface-1 transition-colors group">
+                <div className="bg-surface-2 text-ink-muted p-2 rounded-control group-hover:bg-accent group-hover:text-on-accent transition-colors">
                   <UserPlus size={20} />
                 </div>
                 <div>
-                  <p className="font-bold text-gray-800">Manage Users</p>
-                  <p className="text-xs text-gray-500">Add, view or remove users.</p>
+                  <p className="font-semibold text-ink">Manage Users</p>
+                  <p className="caption">Add, view or remove users.</p>
                 </div>
               </Link>
             )}
             <Link to="/workflows"
-              className="flex items-center gap-4 p-4 border border-purple-100 rounded-xl hover:bg-purple-50 transition-colors group">
-              <div className="bg-purple-100 p-2 rounded-lg group-hover:bg-purple-600 group-hover:text-white transition-colors">
+              className="flex items-center gap-4 p-4 border border-hairline rounded-card hover:bg-surface-1 transition-colors group">
+              <div className="bg-surface-2 text-ink-muted p-2 rounded-control group-hover:bg-accent group-hover:text-on-accent transition-colors">
                 <GitBranch size={20} />
               </div>
               <div>
-                <p className="font-bold text-gray-800">Manage Workflows</p>
-                <p className="text-xs text-gray-500">Create, edit or clone workflow templates.</p>
+                <p className="font-semibold text-ink">Manage Workflows</p>
+                <p className="caption">Create, edit or clone workflow templates.</p>
               </div>
             </Link>
             <Link to="/assign"
-              className="flex items-center gap-4 p-4 border border-green-100 rounded-xl hover:bg-green-50 transition-colors group">
-              <div className="bg-green-100 p-2 rounded-lg group-hover:bg-green-600 group-hover:text-white transition-colors">
+              className="flex items-center gap-4 p-4 border border-hairline rounded-card hover:bg-surface-1 transition-colors group">
+              <div className="bg-surface-2 text-ink-muted p-2 rounded-control group-hover:bg-accent group-hover:text-on-accent transition-colors">
                 <CheckCircle size={20} />
               </div>
               <div>
-                <p className="font-bold text-gray-800">Assign Task</p>
-                <p className="text-xs text-gray-500">Kick off a new workflow for an employee.</p>
+                <p className="font-semibold text-ink">Assign Task</p>
+                <p className="caption">Kick off a new workflow for an employee.</p>
               </div>
             </Link>
             {role === 'Admin' && (
               <Link to="/audit"
-                className="flex items-center gap-4 p-4 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors group">
-                <div className="bg-gray-100 p-2 rounded-lg group-hover:bg-gray-800 group-hover:text-white transition-colors">
+                className="flex items-center gap-4 p-4 border border-hairline rounded-card hover:bg-surface-1 transition-colors group">
+                <div className="bg-surface-2 text-ink-muted p-2 rounded-control group-hover:bg-accent group-hover:text-on-accent transition-colors">
                   <FileSearch size={20} />
                 </div>
                 <div>
-                  <p className="font-bold text-gray-800">Audit Logs</p>
-                  <p className="text-xs text-gray-500">Monitor all system activity and compliance.</p>
+                  <p className="font-semibold text-ink">Audit Logs</p>
+                  <p className="caption">Monitor all system activity and compliance.</p>
                 </div>
               </Link>
             )}

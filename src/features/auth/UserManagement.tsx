@@ -129,33 +129,33 @@ const UserManagement: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">User Management</h2>
-          <p className="text-sm text-gray-500">
-            {activeCount} active · <span className="text-red-500">{deactivatedCount} deactivated</span>
+          <h2 className="page-title">User Management</h2>
+          <p className="caption">
+            {activeCount} active · <span className="text-error">{deactivatedCount} deactivated</span>
           </p>
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-subtle" />
             <input
               type="text"
               placeholder="Search users..."
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
-              className="pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none w-48"
+              className="input pl-9 w-48"
             />
           </div>
           <button
             onClick={handleExport}
             disabled={exporting}
-            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-all shadow-sm text-sm disabled:opacity-50"
+            className="btn btn-secondary"
           >
             <Download size={16} />
             {exporting ? 'Exporting...' : 'Export CSV'}
           </button>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+            className="btn btn-primary"
           >
             <UserPlus size={18} />
             {showForm ? 'Close Form' : 'Register New User'}
@@ -164,36 +164,36 @@ const UserManagement: React.FC = () => {
       </div>
 
       {showForm && (
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-blue-100">
+        <div className="card card-pad">
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
             <div>
-              <label htmlFor="reg-name" className="block text-xs font-bold text-gray-500 uppercase mb-1">Full Name</label>
+              <label htmlFor="reg-name" className="label">Full Name</label>
               <input id="reg-name" type="text" required
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                className="input"
                 value={formData.name}
                 onChange={e => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
             <div>
-              <label htmlFor="reg-email" className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
+              <label htmlFor="reg-email" className="label">Email</label>
               <input id="reg-email" type="email" required
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                className="input"
                 value={formData.email}
                 onChange={e => setFormData({ ...formData, email: e.target.value })}
               />
             </div>
             <div>
-              <label htmlFor="reg-password" className="block text-xs font-bold text-gray-500 uppercase mb-1">Temporary Password</label>
+              <label htmlFor="reg-password" className="label">Temporary Password</label>
               <input id="reg-password" type="text" required
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                className="input"
                 value={formData.password}
                 onChange={e => setFormData({ ...formData, password: e.target.value })}
               />
             </div>
             <div>
-              <label htmlFor="reg-role" className="block text-xs font-bold text-gray-500 uppercase mb-1">System Role</label>
+              <label htmlFor="reg-role" className="label">System Role</label>
               <select id="reg-role"
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                className="input"
                 value={formData.roleId}
                 onChange={e => setFormData({ ...formData, roleId: parseInt(e.target.value) })}
               >
@@ -201,7 +201,7 @@ const UserManagement: React.FC = () => {
               </select>
             </div>
             <div className="col-span-1 md:col-span-2 lg:col-span-4 flex justify-end">
-              <button type="submit" className="w-full sm:w-auto bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 font-bold transition-colors">
+              <button type="submit" className="btn btn-primary w-full sm:w-auto">
                 Confirm Registration
               </button>
             </div>
@@ -210,57 +210,59 @@ const UserManagement: React.FC = () => {
       )}
 
       {/* Users Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+      <div className="card overflow-hidden flex flex-col">
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-gray-50 border-b border-gray-100">
+          <table className="table">
+            <thead>
               <tr>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase whitespace-nowrap">User</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase whitespace-nowrap">Email</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase whitespace-nowrap">Role</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-center whitespace-nowrap">Status</th>
-                <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase text-right whitespace-nowrap">Actions</th>
+                <th>User</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th className="text-center">Status</th>
+                <th className="text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody>
               {loading ? (
-                <tr><td colSpan={5} className="p-10 text-center text-gray-400">Loading users...</td></tr>
+                <tr><td colSpan={5} className="empty-state">Loading users...</td></tr>
               ) : users.length === 0 ? (
-                <tr><td colSpan={5} className="p-10 text-center text-gray-400">No users found.</td></tr>
+                <tr><td colSpan={5} className="empty-state">No users found.</td></tr>
               ) : (
                 users.map(u => (
                   <tr
                     key={u.userId}
-                    className={`transition-colors group ${u.isDeleted ? 'bg-gray-50 opacity-70' : 'hover:bg-gray-50'}`}
+                    className={u.isDeleted ? 'opacity-70' : ''}
                   >
-                    <td className="px-6 py-4 flex items-center gap-3 whitespace-nowrap">
-                      <div className={`p-2 rounded-full transition-colors ${u.isDeleted ? 'bg-gray-200 text-gray-400' : 'bg-blue-100 text-blue-600 group-hover:bg-blue-200'}`}>
+                    <td className="whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-pill bg-surface-2 text-ink-subtle">
                         <UserIcon size={16} />
                       </div>
-                      <span className={`font-medium ${u.isDeleted ? 'text-gray-400 line-through' : 'text-gray-900'}`}>{u.name}</span>
+                      <span className={`font-medium ${u.isDeleted ? 'text-ink-subtle line-through' : 'text-ink'}`}>{u.name}</span>
+                      </div>
                     </td>
-                    <td className={`px-6 py-4 text-sm whitespace-nowrap ${u.isDeleted ? 'text-gray-400' : 'text-gray-600'}`}>{u.email}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-3 py-1 text-[10px] font-bold rounded-full uppercase border ${u.isDeleted ? 'bg-gray-100 text-gray-400 border-gray-200' : 'bg-gray-100 text-gray-700 border-gray-200'}`}>
+                    <td className={`whitespace-nowrap ${u.isDeleted ? 'text-ink-subtle' : 'text-ink-muted'}`}>{u.email}</td>
+                    <td className="whitespace-nowrap">
+                      <span className="chip chip-neutral">
                         {roles.find(r => r.id === u.roleId)?.name || 'User'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-center whitespace-nowrap">
+                    <td className="text-center whitespace-nowrap">
                       {u.isDeleted ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600 border border-red-200">
+                        <span className="chip chip-rejected">
                           <ShieldOff size={12} /> Deactivated
                         </span>
                       ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
+                        <span className="chip chip-completed">
                           <ShieldCheck size={12} /> Active
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-right whitespace-nowrap">
+                    <td className="text-right whitespace-nowrap">
                       {u.isDeleted ? (
                         <button
                           onClick={() => setRestoreModal({ isOpen: true, userId: u.userId, userName: u.name })}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-all"
+                          className="btn btn-ghost btn-sm"
                           title="Restore User"
                         >
                           <RotateCcw size={14} /> Restore
@@ -268,7 +270,7 @@ const UserManagement: React.FC = () => {
                       ) : (
                         <button
                           onClick={() => setDeleteModal({ isOpen: true, userId: u.userId, userName: u.name })}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                          className="btn btn-ghost btn-sm hover:text-error"
                           title="Deactivate User"
                         >
                           <Trash2 size={18} />

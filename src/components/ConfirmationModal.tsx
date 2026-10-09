@@ -27,44 +27,40 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-sm mx-4 overflow-hidden animate-in fade-in zoom-in-95">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-overlay p-4">
+      <div className="bg-canvas border border-hairline rounded-card shadow-xl w-full max-w-sm overflow-hidden">
         {/* Header */}
-        <div className={`px-6 py-4 flex items-center gap-3 ${isDangerous ? 'bg-red-50 border-b border-red-100' : 'bg-gray-50 border-b border-gray-100'}`}>
-          {isDangerous && <AlertTriangle className="text-red-500 flex-shrink-0" size={24} />}
-          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+        <div className="px-6 py-4 flex items-center gap-3 border-b border-hairline">
+          {isDangerous && <AlertTriangle className="text-error shrink-0" size={20} />}
+          <h2 className="section-title">{title}</h2>
           <button
             onClick={onCancel}
             disabled={isLoading}
-            className="ml-auto p-1 hover:bg-gray-200 rounded-md transition-colors disabled:opacity-50"
+            className="btn btn-ghost !px-2 ml-auto"
             aria-label="Close"
           >
-            <X size={20} className="text-gray-500" />
+            <X size={18} />
           </button>
         </div>
 
         {/* Body */}
         <div className="px-6 py-4">
-          <p className="text-gray-600 text-sm">{message}</p>
+          <p className="text-ink-muted text-sm">{message}</p>
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex gap-3 justify-end">
+        <div className="px-6 py-4 bg-surface-1 border-t border-hairline flex gap-3 justify-end">
           <button
             onClick={onCancel}
             disabled={isLoading}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="btn btn-secondary"
           >
             {cancelText}
           </button>
           <button
             onClick={onConfirm}
             disabled={isLoading}
-            className={`px-4 py-2 text-sm font-medium text-white rounded-md transition-colors disabled:opacity-50 ${
-              isDangerous
-                ? 'bg-red-600 hover:bg-red-700'
-                : 'bg-blue-600 hover:bg-blue-700'
-            }`}
+            className={`btn ${isDangerous ? 'btn-danger' : 'btn-primary'}`}
           >
             {isLoading ? 'Processing...' : confirmText}
           </button>

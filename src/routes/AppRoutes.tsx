@@ -18,7 +18,7 @@ import AllTasks from '../features/tasks/AllTasks';
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
-  if (loading) return <div className="flex h-screen items-center justify-center text-gray-400">Loading...</div>;
+  if (loading) return <div className="flex h-screen items-center justify-center text-ink-subtle">Loading...</div>;
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 };
 

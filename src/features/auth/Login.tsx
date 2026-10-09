@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ThemeToggle from '../../components/ThemeToggle';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Lock, Mail, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
@@ -39,22 +40,23 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-xl shadow-lg border border-gray-100">
+    <div className="min-h-screen flex items-center justify-center relative bg-surface-1 py-12 px-4">
+      <div className="absolute top-4 right-4"><ThemeToggle /></div>
+      <div className="w-full max-w-[400px] space-y-6 card card-pad">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            SmartWorkFlow<span className="text-blue-600">X</span>
+          <h2 className="text-center text-2xl font-semibold text-ink">
+            SmartWorkFlow<span className="text-accent">X</span>
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-ink-muted">
             Sign in to access your workflow engine
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
           {error && (
-            <div className="bg-red-50 border-l-4 border-red-400 p-4 flex items-center gap-3">
-              <AlertCircle className="text-red-400" size={20} />
-              <p className="text-sm text-red-700">{error}</p>
+            <div className="alert alert-error flex items-center gap-3">
+              <AlertCircle className="" size={20} />
+              <p className="text-sm">{error}</p>
             </div>
           )}
 
@@ -63,47 +65,47 @@ const Login: React.FC = () => {
               <div className="relative">
                 <label htmlFor="email-address" className="sr-only">Email address</label>
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
+                  <Mail className="h-5 w-5 text-ink-subtle" />
                 </div>
                 <input
                   id="email-address"
                   type="email"
-                  className={`appearance-none rounded-lg relative block w-full px-10 py-3 border ${errors.email ? 'border-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
+                  className={`input px-10 ${errors.email ? 'input-error' : ''}`}
                   placeholder="Email address"
                   {...register('email')}
                 />
               </div>
-              {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>}
+              {errors.email && <p className="field-error">{errors.email.message}</p>}
             </div>
 
             <div>
               <div className="relative">
                 <label htmlFor="password" className="sr-only">Password</label>
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Lock className="h-5 w-5 text-ink-subtle" />
                 </div>
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  className={`appearance-none rounded-lg relative block w-full pl-10 pr-10 py-3 border ${errors.password ? 'border-red-500' : 'border-gray-300'} placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm`}
+                  className={`input pl-10 pr-10 ${errors.password ? 'input-error' : ''}`}
                   placeholder="Password"
                   {...register('password')}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-ink-subtle hover:text-ink transition-colors"
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
-              {errors.password && <p className="mt-1 text-sm text-red-500">{errors.password.message}</p>}
+              {errors.password && <p className="field-error">{errors.password.message}</p>}
             </div>
             
             <div className="flex items-center justify-end">
               <div className="text-sm">
-                <a href="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
+                <a href="/forgot-password" className="font-medium text-accent hover:text-accent-hover">
                   Forgot your password?
                 </a>
               </div>
@@ -114,10 +116,10 @@ const Login: React.FC = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all disabled:opacity-70"
+              className="btn btn-primary w-full"
             >
               {isSubmitting ? (
-                <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
+                <Loader2 className="animate-spin h-5 w-5" />
               ) : null}
               {isSubmitting ? 'Signing in...' : 'Sign in'}
             </button>
@@ -127,17 +129,17 @@ const Login: React.FC = () => {
         <div className="mt-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
+              <div className="w-full border-t border-hairline" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              <span className="px-2 bg-canvas text-ink-subtle">Or continue with</span>
             </div>
           </div>
 
           <div className="mt-6">
             <a
               href={`${import.meta.env.VITE_API_BASE_URL?.replace('/api', '')}/api/Auth/google-login`}
-              className="w-full flex justify-center py-3 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all"
+              className="btn btn-secondary w-full"
             >
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />

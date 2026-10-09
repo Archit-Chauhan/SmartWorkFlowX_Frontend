@@ -4,13 +4,13 @@ import type { SystemAnalytics } from '../../models';
 
 const StatusChart: React.FC<{ stats: SystemAnalytics }> = ({ stats }) => {
   const data = [
-    { name: 'Pending', value: stats.pendingTasks, color: '#f59e0b' },
-    { name: 'Completed', value: stats.completedTasks, color: '#10b981' },
+    { name: 'Pending', value: stats.pendingTasks, color: 'var(--status-pending)' },
+    { name: 'Completed', value: stats.completedTasks, color: 'var(--status-completed)' },
   ];
 
   return (
-    <div className="h-[300px] w-full bg-white p-4 rounded-xl border border-gray-100 shadow-sm">
-      <h3 className="text-sm font-bold text-gray-500 uppercase mb-4 text-center">Task Completion Ratio</h3>
+    <div className="h-[300px] w-full card p-4">
+      <h3 className="caption mb-4 text-center">Task Completion Ratio</h3>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
@@ -21,11 +21,11 @@ const StatusChart: React.FC<{ stats: SystemAnalytics }> = ({ stats }) => {
             dataKey="value"
           >
             {data.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
+              <Cell key={`cell-${index}`} fill={entry.color} stroke="var(--canvas)" />
             ))}
           </Pie>
-          <Tooltip />
-          <Legend verticalAlign="bottom" height={36}/>
+          <Tooltip contentStyle={{ background: 'var(--canvas)', border: '1px solid var(--hairline)', color: 'var(--ink)', borderRadius: 6 }} itemStyle={{ color: 'var(--ink)' }} />
+          <Legend verticalAlign="bottom" height={36} wrapperStyle={{ color: 'var(--ink-muted)', fontSize: 12 }} />
         </PieChart>
       </ResponsiveContainer>
     </div>
