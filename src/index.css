@@ -53,13 +53,13 @@
   --focus-ring: #5e6ad2;
   --overlay: rgb(0 0 0 / 0.5);
 
-  /* Sidebar stays dark in both themes (Carbon side-nav / Linear) */
-  --sidebar-bg: #161616;
-  --sidebar-ink: #c6c6c6;
-  --sidebar-ink-strong: #ffffff;
-  --sidebar-hover: #262626;
-  --sidebar-border: #393939;
-  --sidebar-accent: #828fff;
+  /* Sidebar follows the theme: light panel in light mode, Linear's dark ladder in dark mode */
+  --sidebar-bg: #f4f4f4;
+  --sidebar-ink: #525252;
+  --sidebar-ink-strong: #161616;
+  --sidebar-hover: #e5e5e5;
+  --sidebar-border: #e0e0e0;
+  --sidebar-accent: #5e6ad2;
 
   /* Illustration palette (see src/assets/illustrations). Light theme */
   --ill-accent: var(--accent);
@@ -112,6 +112,7 @@
   --sidebar-ink-strong: #f7f8f8;
   --sidebar-hover: #18191a;
   --sidebar-border: #23252a;
+  --sidebar-accent: #828fff;
 
   /* Illustration palette. Dark theme */
   --ill-ink-1: #7a7e9a;
@@ -150,6 +151,7 @@
     --sidebar-ink-strong: #f7f8f8;
     --sidebar-hover: #18191a;
     --sidebar-border: #23252a;
+    --sidebar-accent: #828fff;
 
     /* Illustration palette. Dark theme */
     --ill-ink-1: #7a7e9a;

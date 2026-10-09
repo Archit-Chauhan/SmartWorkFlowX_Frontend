@@ -6,6 +6,8 @@ import axiosInstance from '../api/axiosInstance';
 import type { Notification, NotificationPaginatedResponse } from '../models';
 import ChangePasswordModal from '../components/ChangePasswordModal';
 import ThemeToggle from '../components/ThemeToggle';
+import Breadcrumbs from '../components/Breadcrumbs';
+import { LogoMark } from '../assets/Logo';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -49,15 +51,17 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
 
   return (
     <header className="bg-canvas border-b border-hairline h-14 flex items-center justify-between px-4 sm:px-6 shrink-0">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 min-w-0">
         <button 
           onClick={onMenuClick}
+          aria-label="Open menu"
           className="btn btn-ghost !px-2 md:hidden"
         >
           <Menu size={20} />
         </button>
-        <h1 className="section-title hidden sm:block">SmartWorkFlowX</h1>
-        <h1 className="section-title sm:hidden">SWFX</h1>
+        {/* The brand lives in the sidebar on desktop; on mobile the drawer is closed, so show the mark only */}
+        <LogoMark className="h-6 w-6 text-ink md:hidden shrink-0" />
+        <Breadcrumbs />
       </div>
 
       <div className="flex items-center gap-2 sm:gap-4">
