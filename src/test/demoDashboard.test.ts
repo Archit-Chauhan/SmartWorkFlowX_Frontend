@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeDashboard, tasksToCsv, type DashboardScope } from '../demo/dashboard';
+import { computeDashboard, permissionsForRole, tasksToCsv, type DashboardScope } from '../demo/dashboard';
 import type { TaskItem, TaskCategory } from '../models/Task';
 import type { DashboardFilters } from '../models/Dashboard';
 
@@ -149,6 +149,69 @@ describe('computeDashboard scope and filters', () => {
     const byAssignee = run({ ...march, assigneeId: 5 });
     expect(byAssignee.kpis.created.current).toBe(1);
     expect(byAssignee.kpis.overdue.current).toBe(1);
+  });
+});
+
+describe('role permissions (RBAC)', () => {
+  const scopeFor = (role: string): DashboardScope =>
+    role === 'Employee'
+      ? { kind: 'self', userId: 4, actedTaskIds: new Set<number>(), permissions: permissionsForRole(role) }
+      : { kind: 'all', permissions: permissionsForRole(role) };
+  const asRole = (role: string, f: DashboardFilters = march) =>
+    computeDashboard(tasks, users, [{ ...workflows[0], status: 'Active' }, { ...workflows[1], status: 'Draft' }], categories, f, scopeFor(role), NOW);
+
+  it('defines the policy table', () => {
+    expect(permissionsForRole('Admin').sort()).toEqual(['activity', 'assignee-filter', 'export-tasks', 'org-totals', 'workload']);
+    expect(permissionsForRole('Manager').sort()).toEqual(['assignee-filter', 'export-tasks', 'org-totals', 'workload']);
+    expect(permissionsForRole('Auditor').sort()).toEqual(['activity', 'assignee-filter', 'export-tasks', 'workload']);
+    expect(permissionsForRole('Employee')).toEqual(['export-tasks']);
+  });
+
+  it('falls back to least privilege for an unknown role', () => {
+    expect(permissionsForRole('Contractor')).toEqual(['export-tasks']);
+    expect(permissionsForRole('')).toEqual(['export-tasks']);
+  });
+
+  it('gives Manager the user and workflow totals, but not audit activity', () => {
+    const r = asRole('Manager');
+    expect(r.permissions).toContain('org-totals');
+    expect(r.permissions).not.toContain('activity');
+    expect(r.totals).toEqual({ users: 2, workflows: 2, activeWorkflows: 1 }); // the deleted user is not counted
+    expect(r.workload.length).toBeGreaterThan(0);
+  });
+
+  it('gives Admin the totals and activity', () => {
+    const r = asRole('Admin');
+    expect(r.permissions).toEqual(expect.arrayContaining(['org-totals', 'activity']));
+    expect(r.totals).toBeDefined();
+  });
+
+  it('withholds the totals from Auditor and Employee', () => {
+    expect(asRole('Auditor').totals).toBeUndefined();
+    expect(asRole('Employee').totals).toBeUndefined();
+  });
+
+  it('keeps the Auditor read-only on all tasks with workload but no totals', () => {
+    const r = asRole('Auditor');
+    expect(r.scope).toBe('all');
+    expect(r.permissions).toContain('workload');
+    expect(r.permissions).not.toContain('org-totals');
+  });
+
+  it('shows an Employee no other people: no workload, no assignees, assigneeId ignored', () => {
+    const r = asRole('Employee', { ...march, assigneeId: 5 });
+    expect(r.scope).toBe('self');
+    expect(r.workload).toEqual([]);
+    expect(r.options.assignees).toEqual([]);
+    // Dan (4) owns task 1 only in range; filtering by Eve (5) must not widen or change the scope
+    expect(r.kpis.created.current).toBe(asRole('Employee').kpis.created.current);
+  });
+
+  it('ignores a forged permission-less assignee filter on the all scope', () => {
+    const noFilter: DashboardScope = { kind: 'all', permissions: ['export-tasks'] };
+    const r = computeDashboard(tasks, users, workflows, categories, { ...march, assigneeId: 5 }, noFilter, NOW);
+    expect(r.kpis.created.current).toBe(run().kpis.created.current);
+    expect(r.options.assignees).toEqual([]);
   });
 });
 

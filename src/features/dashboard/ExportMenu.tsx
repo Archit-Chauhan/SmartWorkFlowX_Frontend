@@ -7,6 +7,8 @@ import { buildSummaryCsv, tasksExportFileName, toQueryParams } from './utils';
 interface ExportMenuProps {
   filters: DashboardFilters;
   data: DashboardResponse | null;
+  /** From the server's permission list. Without it only the on-screen summary can be exported. */
+  canExportTasks: boolean;
   onError: (message: string | null) => void;
 }
 
@@ -21,7 +23,7 @@ function saveBlob(blob: Blob, fileName: string): void {
   window.URL.revokeObjectURL(href);
 }
 
-const ExportMenu: React.FC<ExportMenuProps> = ({ filters, data, onError }) => {
+const ExportMenu: React.FC<ExportMenuProps> = ({ filters, data, canExportTasks, onError }) => {
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -86,7 +88,9 @@ const ExportMenu: React.FC<ExportMenuProps> = ({ filters, data, onError }) => {
       </button>
       {open && (
         <div role="menu" aria-label="Export" className="absolute right-0 z-20 mt-1 min-w-44 bg-canvas border border-hairline rounded-card shadow-lg py-1">
-          <button type="button" role="menuitem" className={itemClass} onClick={exportTasks}>Tasks (CSV)</button>
+          {canExportTasks && (
+            <button type="button" role="menuitem" className={itemClass} onClick={exportTasks}>Tasks (CSV)</button>
+          )}
           <button type="button" role="menuitem" className={itemClass} disabled={!data} onClick={exportSummary}>Summary (CSV)</button>
         </div>
       )}

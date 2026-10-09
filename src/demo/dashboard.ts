@@ -3,14 +3,36 @@ import type { TaskItem, TaskCategory } from '../models/Task';
 import type { User } from '../models/User';
 import type { WorkflowDetail } from '../models/Workflow';
 import type {
-  DashboardFilters, DashboardResponse, KpiValue, OverdueTask, TrendPoint, WorkflowStat, WorkloadRow,
+  DashboardFilters, DashboardPermission, DashboardResponse, KpiValue, OverdueTask, TrendPoint, WorkflowStat, WorkloadRow,
 } from '../models/Dashboard';
 
-/** 'self' is the Employee scope: tasks assigned to the user or acted on by them (ids supplied by the caller). */
-export type DashboardScope = { kind: 'all' } | { kind: 'self'; userId: number; actedTaskIds: ReadonlySet<number> };
+/**
+ * Role policy (docs/DASHBOARD_SPEC.md, "Permissions"). The backend implements the same table.
+ * Admin: everything. Manager: everything except audit activity. Auditor: read-only, no user/workflow totals.
+ * Employee: own tasks only, export limited to those.
+ */
+export function permissionsForRole(role: string): DashboardPermission[] {
+  switch (role) {
+    case 'Admin': return ['workload', 'assignee-filter', 'activity', 'org-totals', 'export-tasks'];
+    case 'Manager': return ['workload', 'assignee-filter', 'org-totals', 'export-tasks'];
+    case 'Auditor': return ['workload', 'assignee-filter', 'activity', 'export-tasks'];
+    default: return ['export-tasks']; // Employee and any unknown role: least privilege
+  }
+}
+
+/**
+ * 'all' covers every task; 'self' is the Employee scope: tasks assigned to the user or acted on by them (ids supplied
+ * by the caller). `permissions` defaults to the Admin set for 'all' and the Employee set for 'self'.
+ */
+export type DashboardScope =
+  | { kind: 'all'; permissions?: DashboardPermission[] }
+  | { kind: 'self'; userId: number; actedTaskIds: ReadonlySet<number>; permissions?: DashboardPermission[] };
+
+const permsOf = (scope: DashboardScope): DashboardPermission[] =>
+  scope.permissions ?? permissionsForRole(scope.kind === 'all' ? 'Admin' : 'Employee');
 
 type UserLite = Pick<User, 'userId' | 'name' | 'isDeleted'>;
-type WorkflowLite = Pick<WorkflowDetail, 'workflowId' | 'title'>;
+type WorkflowLite = Pick<WorkflowDetail, 'workflowId' | 'title'> & { status?: string };
 
 const HOUR = 3600_000;
 const DAY = 24 * HOUR;
@@ -25,7 +47,7 @@ const within = (v: number, a: number, b: number) => v >= a && v <= b;
 const mondayOf = (t: number) => { const d = Math.floor(t / DAY) * DAY; return d - ((new Date(d).getUTCDay() + 6) % 7) * DAY; };
 const round = (n: number, dp = 1) => Math.round(n * 10 ** dp) / 10 ** dp;
 
-/** Applies the scope and the optional filters (not the date range). assigneeId is ignored for the self scope. */
+/** Applies the scope and the optional filters (not the date range). assigneeId is ignored without the 'assignee-filter' permission. */
 export function filterTasks(tasks: TaskItem[], f: DashboardFilters, scope: DashboardScope): TaskItem[] {
   return tasks.filter(t => {
     if (scope.kind === 'self' && t.assignedTo !== scope.userId && !scope.actedTaskIds.has(t.taskId)) return false;
@@ -33,7 +55,7 @@ export function filterTasks(tasks: TaskItem[], f: DashboardFilters, scope: Dashb
     if (f.priority && t.priority !== f.priority) return false;
     if (f.categoryId != null && t.categoryId !== f.categoryId) return false;
     if (f.workflowId != null && t.workflowId !== f.workflowId) return false;
-    if (scope.kind === 'all' && f.assigneeId != null && t.assignedTo !== f.assigneeId) return false;
+    if (permsOf(scope).includes('assignee-filter') && f.assigneeId != null && t.assignedTo !== f.assigneeId) return false;
     return true;
   });
 }
@@ -105,8 +127,9 @@ export function computeDashboard(
     byWf.set(t.workflowId, e);
   }
 
+  const perms = permsOf(scope);
   const load = new Map<number, WorkloadRow>();
-  if (scope.kind === 'all') {
+  if (scope.kind === 'all' && perms.includes('workload')) {
     for (const t of created) {
       if (t.assignedTo == null) continue;
       const row = load.get(t.assignedTo) ?? { userId: t.assignedTo, name: users.find(u => u.userId === t.assignedTo)?.name ?? t.assigneeName ?? `User ${t.assignedTo}`, pending: 0, inProgress: 0, completed: 0 };
@@ -129,6 +152,10 @@ export function computeDashboard(
   return {
     scope: scope.kind === 'self' ? 'self' : 'all',
     generatedAt: now.toISOString(),
+    permissions: perms,
+    ...(perms.includes('org-totals')
+      ? { totals: { users: users.filter(u => !u.isDeleted).length, workflows: workflows.length, activeWorkflows: workflows.filter(w => w.status === 'Active').length } }
+      : {}),
     range: { from: filters.from, to: filters.to, previousFrom: fmt(prevStart), previousTo: fmt(prevEnd), bucket },
     kpis: {
       created: kpi(cur.created, prev.created),
@@ -149,7 +176,7 @@ export function computeDashboard(
     options: {
       workflows: workflows.map(w => ({ id: w.workflowId, title: w.title })),
       categories: categories.map(c => ({ id: c.categoryId, name: c.name, colorHex: c.colorHex })),
-      assignees: scope.kind === 'self' ? [] : users.filter(u => !u.isDeleted).map(u => ({ id: u.userId, name: u.name })),
+      assignees: perms.includes('assignee-filter') ? users.filter(u => !u.isDeleted).map(u => ({ id: u.userId, name: u.name })) : [],
     },
   };
 }

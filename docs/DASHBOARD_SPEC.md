@@ -9,10 +9,29 @@ Query: `from`, `to` (yyyy-MM-dd, inclusive, required), optional `status`, `prior
 Response: `DashboardResponse` in `src/models/Dashboard.ts`.
 Authorisation: any signed-in user. Scope is decided on the server:
 - Admin, Manager, Auditor: all tasks (`scope: "all"`).
-- Employee: only tasks assigned to them or acted on by them (`scope: "self"`); `workload` and `options.assignees` are empty, and `assigneeId` is ignored.
+- Employee: only tasks assigned to them or acted on by them (`scope: "self"`). See Permissions below for the exact policy.
 
 ### `GET /api/Report/dashboard/export`
 Same query. Returns `text/csv` of the filtered tasks: `TaskId,Title,Workflow,Category,Assignee,Status,Priority,CreatedAt,DueDate,CompletedAt,CycleHours,Overdue`. Same scope rules.
+
+## Permissions (RBAC)
+The server decides what each role may see; the UI renders only what the response lists in `permissions`. The role comes from the signed-in user's token, never from a request parameter, and the scope is applied inside the query so out-of-scope rows never leave the server.
+
+| Permission | What it unlocks | Admin | Manager | Auditor | Employee |
+|---|---|---|---|---|---|
+| (task scope) | which tasks feed every number | all | all | all (read-only) | own: assigned to or acted on by them |
+| `workload` | per-person workload (other people's names) | yes | yes | yes | no |
+| `assignee-filter` | filter by any assignee, and the assignee list | yes | yes | yes | no |
+| `activity` | recent audit-log activity | yes | no | yes | no |
+| `org-totals` | `totals`: user count, workflow count, active workflows | yes | yes | no | no |
+| `export-tasks` | tasks CSV, within the user's scope | all tasks | all tasks | all tasks | own tasks |
+
+Rules:
+- A field that is not permitted is omitted or empty (`workload: []`, `options.assignees: []`, no `totals`). A permission-less request parameter is ignored, never an error that reveals data (an Employee sending `assigneeId` still gets only their own tasks).
+- An unknown role gets the least-privilege set (`export-tasks` over its own tasks).
+- `GET /Report/audit-logs` (+ export) stays Admin and Auditor only, matching `activity`.
+- `/Report/analytics` (org-wide counts and per-user figures, currently open to every signed-in user) must be restricted to the same policy or retired in favour of this endpoint.
+- Each dashboard export writes an audit-log entry (user, filters, row count).
 
 ## Definitions (all computed over tasks that match the filters)
 - **Range**: `from` 00:00 to `to` 23:59:59.999. **Previous period**: the same number of days directly before `from`.

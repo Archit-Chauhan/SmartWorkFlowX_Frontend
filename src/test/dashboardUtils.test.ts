@@ -8,6 +8,7 @@ import {
 
 const fixture: DashboardResponse = {
   scope: 'all',
+  permissions: ['workload', 'assignee-filter', 'export-tasks'],
   generatedAt: '2026-03-10T09:30:00Z',
   range: { from: '2026-02-09', to: '2026-03-10', previousFrom: '2026-01-10', previousTo: '2026-02-08', bucket: 'day' },
   kpis: {

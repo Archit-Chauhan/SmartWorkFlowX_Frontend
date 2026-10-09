@@ -4,7 +4,7 @@ import { buildStore, CATEGORIES, ME_BY_ROLE, ROLES, type DemoStore } from './dat
 import type { UserRole } from '../models/User';
 import type { TaskItem } from '../models/Task';
 import type { DashboardFilters } from '../models/Dashboard';
-import { computeDashboard, tasksToCsv, type DashboardScope } from './dashboard';
+import { computeDashboard, permissionsForRole, tasksToCsv, type DashboardScope } from './dashboard';
 
 let store: DemoStore | null = null;
 const isEmpty = () => { try { return localStorage.getItem('swfx-demo-data') === 'empty'; } catch { return false; } };
@@ -37,9 +37,10 @@ const dashboardArgs = (q: URLSearchParams, s: DemoStore): { filters: DashboardFi
     categoryId: num('categoryId'), workflowId: num('workflowId'), assigneeId: num('assigneeId'),
   };
   const name = meName();
+  const permissions = permissionsForRole(currentRole());
   const scope: DashboardScope = currentRole() === 'Employee'
-    ? { kind: 'self', userId: meId(), actedTaskIds: new Set(s.tasks.filter(t => s.history[t.taskId]?.some(h => h.actedByName === name)).map(t => t.taskId)) }
-    : { kind: 'all' };
+    ? { kind: 'self', userId: meId(), actedTaskIds: new Set(s.tasks.filter(t => s.history[t.taskId]?.some(h => h.actedByName === name)).map(t => t.taskId)), permissions }
+    : { kind: 'all', permissions };
   return { filters, scope };
 };
 const fail = (status: number, message: string) =>
@@ -88,6 +89,8 @@ function handle(method: string, path: string, q: URLSearchParams, body: Record<s
     const { filters, scope } = dashboardArgs(q, s);
     return new Blob([tasksToCsv(s.tasks, filters, scope)], { type: 'text/csv' });
   }
+  // Same gate as the real API: audit data is for Admin and Auditor only
+  if (method === 'get' && path.startsWith('/Report/audit-logs') && !['Admin', 'Auditor'].includes(currentRole())) return fail(403, 'Forbidden');
   if (method === 'get' && path === '/Report/audit-logs') return page(s.audit.filter(contains(q, 'userName', 'action', 'entityName')), q, 'pageSize');
   if (method === 'get' && path === '/Report/audit-logs/export') return new Blob([csv(s.audit as unknown as Record<string, unknown>[])], { type: 'text/csv' });
 

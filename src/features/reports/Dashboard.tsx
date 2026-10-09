@@ -2,11 +2,11 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { RefreshCw } from 'lucide-react';
 import axiosInstance from '../../api/axiosInstance';
-import { useAuth } from '../../context/AuthContext';
 import EmptyState from '../../components/EmptyState';
-import type { PaginatedResponse } from '../../models';
+import type { DashboardPermission, PaginatedResponse } from '../../models';
 import KpiCards from '../dashboard/KpiCards';
 import FiltersBar from '../dashboard/FiltersBar';
+import OrgTotals from '../dashboard/OrgTotals';
 import ExportMenu from '../dashboard/ExportMenu';
 import DashboardSkeleton from '../dashboard/DashboardSkeleton';
 import { AgingChart, CategoryChart, PriorityChart, StatusDonut, TrendChart, WorkloadChart } from '../dashboard/Charts';
@@ -18,7 +18,6 @@ import {
 } from '../dashboard/utils';
 
 const Dashboard: React.FC = () => {
-  const { role } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [today] = useState(() => new Date());
   const [exportError, setExportError] = useState<string | null>(null);
@@ -31,7 +30,9 @@ const Dashboard: React.FC = () => {
 
   const { data, loading, error, reload } = useDashboardData(filters);
 
-  const canSeeActivity = role === 'Admin' || role === 'Auditor';
+  // What is shown comes from the server's permission list, never from the role name
+  const can = (p: DashboardPermission) => Boolean(data?.permissions.includes(p));
+  const canSeeActivity = can('activity');
   useEffect(() => {
     if (!canSeeActivity) return;
     let cancelled = false;
@@ -46,21 +47,21 @@ const Dashboard: React.FC = () => {
     setSearchParams(serializeUrlState(next), { replace: true });
   }, [setSearchParams]);
 
-  const selfScope = data?.scope === 'self';
+  const showWorkload = can('workload');
 
   return (
     <div className="max-w-7xl mx-auto space-y-4">
       <h1 className="sr-only">Dashboard</h1>
 
       <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4">
-        <FiltersBar state={state} resolved={resolved} options={data?.options ?? null} hideAssignee={selfScope} onChange={onChange} />
+        <FiltersBar state={state} resolved={resolved} options={data?.options ?? null} hideAssignee={!can('assignee-filter')} onChange={onChange} />
         <div className="flex items-center gap-3 flex-shrink-0 flex-wrap">
           {data && <span className="caption tabular-nums">Updated {formatClock(data.generatedAt)}</span>}
           <button type="button" className="btn btn-secondary" onClick={reload} disabled={loading}>
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} aria-hidden="true" />
             Refresh
           </button>
-          <ExportMenu filters={filters} data={data} onError={setExportError} />
+          <ExportMenu filters={filters} data={data} canExportTasks={can('export-tasks')} onError={setExportError} />
         </div>
       </div>
 
@@ -92,6 +93,8 @@ const Dashboard: React.FC = () => {
             </div>
           ) : (
             <>
+              {data.totals && <OrgTotals totals={data.totals} />}
+
               <TrendChart data={data} />
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -101,10 +104,10 @@ const Dashboard: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className={selfScope ? 'lg:col-span-2 min-w-0' : 'min-w-0'}>
+                <div className={showWorkload ? 'min-w-0' : 'lg:col-span-2 min-w-0'}>
                   <WorkflowPerformance rows={data.byWorkflow} />
                 </div>
-                {!selfScope && <WorkloadChart data={data} />}
+                {showWorkload && <WorkloadChart data={data} />}
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">

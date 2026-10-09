@@ -74,10 +74,24 @@ export interface OverdueTask {
   daysOverdue: number;
 }
 
+/** What the signed-in user may see. The server decides; the UI renders only what is listed. */
+export type DashboardPermission =
+  | 'workload'          // per-person workload (other people's names)
+  | 'assignee-filter'   // filter by any assignee
+  | 'activity'          // recent audit-log activity
+  | 'org-totals'        // user and workflow totals
+  | 'export-tasks';     // download the filtered tasks as CSV (within the user's scope)
+
+export interface OrgTotals {
+  users: number;
+  workflows: number;
+  activeWorkflows: number;
+}
+
 export interface DashboardOptions {
   workflows: { id: number; title: string }[];
   categories: { id: number; name: string; colorHex: string }[];
-  /** Empty for the Employee scope. */
+  /** Empty without the 'assignee-filter' permission. */
   assignees: { id: number; name: string }[];
 }
 
@@ -85,6 +99,9 @@ export interface DashboardResponse {
   /** 'self' means the numbers cover only the signed-in user's tasks (Employee). */
   scope: 'all' | 'self';
   generatedAt: string;
+  permissions: DashboardPermission[];
+  /** Present only with the 'org-totals' permission. */
+  totals?: OrgTotals;
   range: DashboardRange;
   kpis: DashboardKpis;
   series: TrendPoint[];
@@ -92,7 +109,7 @@ export interface DashboardResponse {
   byPriority: { priority: string; count: number }[];
   byCategory: { categoryId: number | null; name: string; colorHex: string; count: number }[];
   byWorkflow: WorkflowStat[];
-  /** Empty for the Employee scope. */
+  /** Empty without the 'workload' permission. */
   workload: WorkloadRow[];
   overdueAging: { bucket: '1-3 days' | '4-7 days' | '8-14 days' | '15+ days'; count: number }[];
   topOverdue: OverdueTask[];
