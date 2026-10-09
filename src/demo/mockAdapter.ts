@@ -118,7 +118,11 @@ function handle(method: string, path: string, q: URLSearchParams, body: Record<s
 
   // ── Tasks ──
   if (method === 'get' && path === '/Task/categories') return CATEGORIES;
-  if (method === 'get' && path === '/Task/assignable-users') return s.users.filter(u => !u.isDeleted).map(u => ({ userId: u.userId, name: u.name, email: u.email, roleName: u.role?.roleName }));
+  if (method === 'get' && path === '/Task/assignable-users') {
+    const open = (id: number) => s.tasks.filter(t => t.assignedTo === id && (t.status === 'Pending' || t.status === 'In Progress')).length;
+    return s.users.filter(u => !u.isDeleted).sort((a, b) => a.name.localeCompare(b.name))
+      .map(u => ({ userId: u.userId, name: u.name, email: u.email, roleName: u.role?.roleName, openTaskCount: open(u.userId) }));
+  }
   if (method === 'post' && path === '/Task/formalize-description') return { formalizedText: `Please complete the following request in line with company policy: ${String(body.rawText || '').trim()}` };
   // The API sends the approval-step count; the real server sorts my-tasks by due date (no date last), then newest first.
   const withSteps = (t: TaskItem): TaskItem => ({ ...t, totalSteps: s.workflows.find(w => w.workflowId === t.workflowId)?.steps.length });
@@ -140,10 +144,25 @@ function handle(method: string, path: string, q: URLSearchParams, body: Record<s
   }
   if (method === 'get' && (r = m(/^\/Task\/(\d+)\/history$/))) return s.history[+r[1]] ?? [];
   if (method === 'post' && path === '/Task/assign') {
+    // Same rules, order and messages as TaskService.AssignTaskAsync (see docs/ASSIGN_TASK_SPEC.md).
     const wf = s.workflows.find(w => w.workflowId === +body.workflowId);
-    const who = s.users.find(u => u.userId === +body.assignedTo);
-    const cat = CATEGORIES.find(c => c.categoryId === +body.categoryId);
-    const t: TaskItem = { taskId: ++s.nextId, title: body.title, description: body.description, workflowId: +body.workflowId, workflowTitle: wf?.title, assignedTo: who?.userId, assigneeName: who?.name, status: 'In Progress', priority: body.priority || 'Medium', currentStepOrder: 0, dueDate: body.dueDate, createdAt: new Date().toISOString(), categoryId: cat?.categoryId, categoryName: cat?.name, categoryColor: cat?.colorHex };
+    if (!wf) return fail(404, 'Workflow not found.');
+    if (wf.status !== 'Active') return fail(400, 'Only active workflows can be used to assign tasks.');
+    if (wf.steps.length === 0) return fail(400, 'This workflow has no steps.');
+    const title = String(body.title ?? '').trim();
+    if (!title) return fail(400, 'Task title is required.');
+    if (title.length > 200) return fail(400, 'Task title must be 200 characters or fewer.');
+    if (String(body.description ?? '').length > 2000) return fail(400, 'Description must be 2000 characters or fewer.');
+    if (!['Low', 'Medium', 'High'].includes(body.priority)) return fail(400, 'Priority must be Low, Medium or High.');
+    const who = s.users.find(u => u.userId === +body.assignedTo && !u.isDeleted);
+    if (!who) return fail(400, 'The selected person was not found or is deactivated.');
+    const cat = body.categoryId ? CATEGORIES.find(c => c.categoryId === +body.categoryId) : undefined;
+    if (body.categoryId && !cat) return fail(400, 'The selected category was not found.');
+    if (body.dueDate) {
+      const due = new Date(body.dueDate).toISOString().slice(0, 10);
+      if (due < new Date(Date.now() - 86400_000).toISOString().slice(0, 10)) return fail(400, 'The due date cannot be in the past.');
+    }
+    const t: TaskItem = { taskId: ++s.nextId, title, description: String(body.description ?? '').trim(), workflowId: +body.workflowId, workflowTitle: wf?.title, assignedTo: who?.userId, assigneeName: who?.name, status: 'In Progress', priority: body.priority || 'Medium', currentStepOrder: 0, dueDate: body.dueDate, createdAt: new Date().toISOString(), categoryId: cat?.categoryId, categoryName: cat?.name, categoryColor: cat?.colorHex };
     s.tasks.unshift(t); s.history[t.taskId] = []; return { message: 'Task assigned successfully', taskId: t.taskId };
   }
   if (method === 'post' && (r = m(/^\/Task\/(\d+)\/approve$/))) {

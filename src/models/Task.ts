@@ -66,3 +66,13 @@ export interface AllTasksResponse {
   pageSize: number;
   counts: Record<TaskGroupFilter, number>;
 }
+
+/** A person who can be given a task (GET /Task/assignable-users). */
+export interface AssignableUser {
+  userId: number;
+  name: string;
+  email: string;
+  roleName: string;
+  /** Pending or In Progress tasks the person already holds. Older servers omit it. */
+  openTaskCount?: number;
+}
