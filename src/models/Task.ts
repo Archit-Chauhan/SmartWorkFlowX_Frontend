@@ -18,6 +18,8 @@ export interface TaskItem {
   status: TaskStatus;
   priority: TaskPriority;
   currentStepOrder: number;
+  /** Number of approval steps in the workflow (the API may omit it). */
+  totalSteps?: number;
   rejectedReason?: string;
   dueDate?: string;
   completedAt?: string;

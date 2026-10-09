@@ -119,8 +119,15 @@ function handle(method: string, path: string, q: URLSearchParams, body: Record<s
   if (method === 'get' && path === '/Task/categories') return CATEGORIES;
   if (method === 'get' && path === '/Task/assignable-users') return s.users.filter(u => !u.isDeleted).map(u => ({ userId: u.userId, name: u.name, email: u.email, roleName: u.role?.roleName }));
   if (method === 'post' && path === '/Task/formalize-description') return { formalizedText: `Please complete the following request in line with company policy: ${String(body.rawText || '').trim()}` };
-  if (method === 'get' && path === '/Task/my-tasks') return page(s.tasks.filter(t => t.assignedTo === meId() && (t.status === 'Pending' || t.status === 'In Progress')), q);
-  if (method === 'get' && path === '/Task/my-activity') return page(s.tasks.filter(t => s.history[t.taskId]?.some(h => h.actedByName === meName()) && t.assignedTo !== meId()), q);
+  // The API sends the approval-step count; the real server sorts my-tasks by due date (no date last), then newest first.
+  const withSteps = (t: TaskItem): TaskItem => ({ ...t, totalSteps: s.workflows.find(w => w.workflowId === t.workflowId)?.steps.length });
+  const dueRank = (t: TaskItem) => (t.dueDate ? new Date(t.dueDate).getTime() : Infinity);
+  if (method === 'get' && path === '/Task/my-tasks') {
+    const mine = s.tasks.filter(t => t.assignedTo === meId() && (t.status === 'Pending' || t.status === 'In Progress'));
+    mine.sort((a, b) => (dueRank(a) === dueRank(b) ? Date.parse(b.createdAt) - Date.parse(a.createdAt) : dueRank(a) < dueRank(b) ? -1 : 1));
+    return page(mine.map(withSteps), q);
+  }
+  if (method === 'get' && path === '/Task/my-activity') return page(s.tasks.filter(t => s.history[t.taskId]?.some(h => h.actedByName === meName()) && t.assignedTo !== meId()).map(withSteps), q);
   if (method === 'get' && path === '/Task/all') {
     const st = q.get('status'), pr = q.get('priority'), cat = q.get('categoryId');
     return s.tasks.filter(t => (!st || t.status === st) && (!pr || t.priority === pr) && (!cat || t.categoryId === +cat));
