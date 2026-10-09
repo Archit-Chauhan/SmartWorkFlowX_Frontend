@@ -12,10 +12,12 @@ interface ShellProps {
   onClose: () => void;
   children: React.ReactNode;
   footer: React.ReactNode;
+  /** Replaces the default tone icon (check / warning). */
+  icon?: React.ReactNode;
 }
 
 /** Centered confirmation dialog: scrim, focus trap, Escape to cancel. */
-const DialogShell: React.FC<ShellProps> = ({ tone, title, description, busy, onClose, children, footer }) => {
+export const DialogShell: React.FC<ShellProps> = ({ tone, title, description, busy, onClose, children, footer, icon }) => {
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const descId = useId();
@@ -36,7 +38,7 @@ const DialogShell: React.FC<ShellProps> = ({ tone, title, description, busy, onC
       >
         <div className="flex items-start gap-3 px-5 pt-5">
           <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${tone === 'danger' ? 'chip-rejected' : 'bg-accent-soft text-accent'}`}>
-            {tone === 'danger' ? <AlertTriangle size={20} /> : <CheckCircle size={20} />}
+            {icon ?? (tone === 'danger' ? <AlertTriangle size={20} /> : <CheckCircle size={20} />)}
           </span>
           <div>
             <h2 id={titleId} className="section-title">{title}</h2>

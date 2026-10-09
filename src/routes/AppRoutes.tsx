@@ -11,6 +11,7 @@ import OAuthCallback from '../features/auth/OAuthCallback';
 import Dashboard from '../features/reports/Dashboard';
 import TaskList from '../features/tasks/TaskList';
 import TaskAssign from '../features/tasks/TaskAssign';
+import WorkflowList from '../features/workflows/WorkflowList';
 import WorkflowBuilder from '../features/workflows/WorkflowBuilder';
 import UserManagement from '../features/auth/UserManagement';
 import AuditLog from '../features/reports/AuditLog';
@@ -52,6 +53,16 @@ const AppRoutes: React.FC = () => {
           </RoleRoute>
         } />
         <Route path="workflows" element={
+          <RoleRoute roles={['Admin', 'Manager']}>
+            <WorkflowList />
+          </RoleRoute>
+        } />
+        <Route path="workflows/new" element={
+          <RoleRoute roles={['Admin', 'Manager']}>
+            <WorkflowBuilder />
+          </RoleRoute>
+        } />
+        <Route path="workflows/:id/edit" element={
           <RoleRoute roles={['Admin', 'Manager']}>
             <WorkflowBuilder />
           </RoleRoute>

@@ -7,8 +7,10 @@ export interface WorkflowStep {
   stepName: string;
   description?: string;
   approverRoleName: string;
+  /** Id of the approver role: the edit form uses this, never the role name. */
+  approverRoleId: number;
   onRejectAction: OnRejectAction;
-  escalationHours?: number;
+  escalationHours?: number | null;
 }
 
 export interface WorkflowStepCreateDto {
@@ -25,6 +27,23 @@ export interface Workflow {
   title: string;
   status: WorkflowStatus;
   stepCount: number;
+  description?: string | null;
+  createdByName?: string;
+  createdAt?: string;
+  /** Tasks of this workflow that are Pending or In Progress. Above zero the workflow is locked. */
+  activeTaskCount?: number;
+  steps?: WorkflowStepSummary[];
+}
+
+export interface WorkflowStepSummary {
+  stepOrder: number;
+  stepName: string;
+  approverRoleName: string;
+}
+
+export interface WorkflowRole {
+  roleId: number;
+  roleName: string;
 }
 
 export interface WorkflowDetail {
@@ -40,6 +59,8 @@ export interface WorkflowDetail {
 export interface WorkflowCreateRequest {
   title: string;
   description: string;
+  /** Draft (default) or Active. */
+  status?: 'Draft' | 'Active';
   steps: WorkflowStepCreateDto[];
 }
 

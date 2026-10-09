@@ -41,7 +41,7 @@ export const CATEGORIES: TaskCategory[] = [
 ];
 
 const step = (id: number, order: number, name: string, role: UserRole, onReject: 'GoBack' | 'Cancel', desc?: string, esc?: number): WorkflowStep => ({
-  stepId: id, stepOrder: order, stepName: name, description: desc, approverRoleName: role, onRejectAction: onReject, escalationHours: esc,
+  stepId: id, stepOrder: order, stepName: name, description: desc, approverRoleName: role, approverRoleId: ROLES.find(r => r.roleName === role)!.roleId, onRejectAction: onReject, escalationHours: esc,
 });
 
 const workflowSeed = (): WorkflowDetail[] => [
@@ -53,6 +53,13 @@ const workflowSeed = (): WorkflowDetail[] => [
     steps: [step(4, 1, 'Compliance check', 'Auditor', 'GoBack'), step(5, 2, 'Manager approval', 'Manager', 'GoBack'), step(6, 3, 'Admin activation', 'Admin', 'Cancel')] },
   { workflowId: 4, title: 'Contract Review', description: 'Legal review of customer contracts.', status: 'Inactive', createdByName: 'Carol Lee', createdAt: ago(75 * DAY),
     steps: [step(7, 1, 'Legal review', 'Manager', 'GoBack', undefined, 72), step(8, 2, 'Executive sign-off', 'Admin', 'Cancel')] },
+  // The workflows below have no tasks yet (see buildStore), so they can be edited and deactivated in the demo.
+  { workflowId: 5, title: 'Hardware Request', description: 'Laptops and peripherals for new joiners.', status: 'Active', createdByName: 'Bob Jones', createdAt: ago(14 * DAY),
+    steps: [step(9, 1, 'Manager review', 'Manager', 'GoBack'), step(10, 2, 'IT approval', 'Admin', 'Cancel', 'Check stock and budget code', 48)] },
+  { workflowId: 6, title: 'Purchase Order Approval', description: 'Draft. Waiting for Finance to confirm the approval limits.', status: 'Draft', createdByName: 'Carol Lee', createdAt: ago(3 * DAY),
+    steps: [step(11, 1, 'Budget owner check', 'Manager', 'GoBack', 'Confirm the budget code has funds'), step(12, 2, 'Finance approval', 'Admin', 'Cancel')] },
+  { workflowId: 7, title: 'Travel Policy', description: 'Replaced by Expense Approval.', status: 'Inactive', createdByName: 'Alice Smith', createdAt: ago(120 * DAY),
+    steps: [step(13, 1, 'Manager approval', 'Manager', 'Cancel'), step(14, 2, 'Audit check', 'Auditor', 'Cancel')] },
 ];
 
 const TITLES = [
@@ -209,7 +216,7 @@ export function buildStore(empty: boolean): DemoStore {
     userId, name, email, roleId, role: roleOf(roleId), isDeleted, createdAt: ago(userId * 6 * DAY),
   }));
   const workflows = empty ? [] : workflowSeed();
-  const { tasks, history } = empty ? { tasks: [] as TaskItem[], history: {} as Record<number, TaskStepHistory[]> } : buildTasks(workflowSeed());
+  const { tasks, history } = empty ? { tasks: [] as TaskItem[], history: {} as Record<number, TaskStepHistory[]> } : buildTasks(workflowSeed().slice(0, 4));
   return {
     users,
     workflows,
