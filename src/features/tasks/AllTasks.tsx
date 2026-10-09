@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import axiosInstance from '../../api/axiosInstance';
 import type { TaskItem, TaskCategory } from '../../models';
 import { Flag, AlertTriangle, RotateCcw, ChevronDown, ChevronUp, CheckCircle, XCircle, ListFilter } from 'lucide-react';
+import EmptyState from '../../components/EmptyState';
 import type { TaskStepHistory } from '../../models';
 
 const PRIORITY_STYLES: Record<string, string> = {
@@ -175,10 +176,7 @@ const AllTasks: React.FC = () => {
           <Flag size={20} className="animate-pulse mr-2" /> Loading tasks...
         </div>
       ) : tasks.length === 0 ? (
-        <div className="empty-state">
-          <ListFilter size={40} className="mx-auto mb-3 text-ink-subtle" />
-          <p className="font-medium">No tasks match the current filters.</p>
-        </div>
+        <EmptyState illustration="empty" title="No tasks match the current filters." hint="Try clearing a filter to see more." />
       ) : (
         <div className="space-y-3">
           {tasks.map(task => (

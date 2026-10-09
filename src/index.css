@@ -60,6 +60,15 @@
   --sidebar-hover: #262626;
   --sidebar-border: #393939;
   --sidebar-accent: #828fff;
+
+  /* Illustration palette (see src/assets/illustrations). Light theme */
+  --ill-accent: var(--accent);
+  --ill-ink-1: #1f1d33;
+  --ill-ink-2: #3f3d56;
+  --ill-paper: #ffffff;
+  --ill-soft-1: #f2f2f2;
+  --ill-soft-2: #e6e6e6;
+  --ill-soft-3: #cccccc;
 }
 
 /* Dark theme (Linear surface ladder). Applied by toggle, or by OS when no theme is chosen. */
@@ -103,6 +112,14 @@
   --sidebar-ink-strong: #f7f8f8;
   --sidebar-hover: #18191a;
   --sidebar-border: #23252a;
+
+  /* Illustration palette. Dark theme */
+  --ill-ink-1: #7a7e9a;
+  --ill-ink-2: #aeb2cc;
+  --ill-paper: #1c1d20;
+  --ill-soft-1: #17181a;
+  --ill-soft-2: #212226;
+  --ill-soft-3: #34343a;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -133,6 +150,14 @@
     --sidebar-ink-strong: #f7f8f8;
     --sidebar-hover: #18191a;
     --sidebar-border: #23252a;
+
+    /* Illustration palette. Dark theme */
+    --ill-ink-1: #7a7e9a;
+    --ill-ink-2: #aeb2cc;
+    --ill-paper: #1c1d20;
+    --ill-soft-1: #17181a;
+    --ill-soft-2: #212226;
+    --ill-soft-3: #34343a;
   }
 }
 

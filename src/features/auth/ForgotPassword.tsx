@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import ThemeToggle from '../../components/ThemeToggle';
+import PublicLayout from '../../components/PublicLayout';
 import { LogoMark } from '../../assets/Logo';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
@@ -65,8 +65,7 @@ const ForgotPassword: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative bg-surface-1 py-12 px-4">
-      <div className="absolute top-4 right-4"><ThemeToggle /></div>
+    <PublicLayout illustration="forgot-password" headline="Locked out? It happens." text="Enter your email and we will send you a link to choose a new password.">
       <div className="w-full max-w-[400px] space-y-6 card card-pad">
         <div>
           <button 
@@ -145,7 +144,7 @@ const ForgotPassword: React.FC = () => {
           </div>
         </form>
       </div>
-    </div>
+    </PublicLayout>
   );
 };
 

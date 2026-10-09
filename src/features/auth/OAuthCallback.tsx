@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import ThemeToggle from '../../components/ThemeToggle';
+import PublicLayout from '../../components/PublicLayout';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Loader2, AlertCircle } from 'lucide-react';
 
@@ -42,8 +42,7 @@ const OAuthCallback: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center relative bg-surface-1 px-4">
-        <div className="absolute top-4 right-4"><ThemeToggle /></div>
+      <PublicLayout illustration="access-denied" headline="We couldn't sign you in" text="Check that your Google account is registered with SmartWorkFlowX, then try again.">
         <div className="w-full max-w-[400px] card card-pad text-center">
           <AlertCircle className="mx-auto text-error mb-4" size={48} />
           <h2 className="section-title mb-2">Authentication Error</h2>
@@ -55,17 +54,18 @@ const OAuthCallback: React.FC = () => {
             Back to Login
           </button>
         </div>
-      </div>
+      </PublicLayout>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center relative bg-surface-1 px-4">
-      <div className="absolute top-4 right-4"><ThemeToggle /></div>
-      <Loader2 className="animate-spin text-accent mb-4" size={48} />
-      <h2 className="section-title">Authenticating...</h2>
-      <p className="text-ink-muted text-sm mt-2">Please wait while we log you in safely.</p>
-    </div>
+    <PublicLayout illustration="process" headline="Signing you in" text="Hang tight while we confirm your account.">
+      <div className="flex flex-col items-center text-center">
+        <Loader2 className="animate-spin text-accent mb-4" size={48} />
+        <h2 className="section-title">Authenticating...</h2>
+        <p className="text-ink-muted text-sm mt-2">Please wait while we log you in safely.</p>
+      </div>
+    </PublicLayout>
   );
 };
 

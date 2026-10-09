@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axiosInstance from '../../api/axiosInstance';
 import { History, ShieldCheck, User, Calendar, Activity, Download, Search } from 'lucide-react';
 import Pagination from '../../components/Pagination';
+import EmptyState from '../../components/EmptyState';
 import type { PaginatedResponse } from '../../models';
 import { toast } from 'react-toastify';
 
@@ -129,7 +130,7 @@ const AuditLog: React.FC = () => {
                   </td>
                 </tr>
               ) : logs.length === 0 ? (
-                <tr><td colSpan={4} className="empty-state italic">No activity logs recorded yet.</td></tr>
+                <tr><td colSpan={4}><EmptyState illustration="empty" title="No activity logs recorded yet." /></td></tr>
               ) : (
                 logs.map((log, index) => (
                   <tr key={index}>

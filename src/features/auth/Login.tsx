@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import ThemeToggle from '../../components/ThemeToggle';
+import PublicLayout from '../../components/PublicLayout';
 import { LogoMark } from '../../assets/Logo';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -41,8 +41,7 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative bg-surface-1 py-12 px-4">
-      <div className="absolute top-4 right-4"><ThemeToggle /></div>
+    <PublicLayout illustration="secure-login" headline="Every request, routed to the right person" text="Sign in to review, approve and track work across your team.">
       <div className="w-full max-w-[400px] space-y-6 card card-pad">
         <div>
           <LogoMark className="h-12 w-12 mx-auto mb-3 text-ink" />
@@ -155,7 +154,7 @@ const Login: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </PublicLayout>
   );
 };
 
