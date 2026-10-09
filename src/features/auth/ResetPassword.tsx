@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ThemeToggle from '../../components/ThemeToggle';
+import { LogoMark } from '../../assets/Logo';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import { Lock, AlertCircle, CheckCircle2, Loader2, Eye, EyeOff } from 'lucide-react';
@@ -99,6 +100,7 @@ const ResetPassword: React.FC = () => {
       <div className="absolute top-4 right-4"><ThemeToggle /></div>
       <div className="w-full max-w-[400px] space-y-6 card card-pad">
         <div>
+          <LogoMark className="h-10 w-10 mx-auto mb-3 text-ink" />
           <h2 className="text-center text-2xl font-semibold text-ink">
             Set New Password
           </h2>

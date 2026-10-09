@@ -59,6 +59,7 @@
   --sidebar-ink-strong: #ffffff;
   --sidebar-hover: #262626;
   --sidebar-border: #393939;
+  --sidebar-accent: #828fff;
 }
 
 /* Dark theme (Linear surface ladder). Applied by toggle, or by OS when no theme is chosen. */

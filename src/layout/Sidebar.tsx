@@ -1,4 +1,5 @@
 import React from 'react';
+import Logo from '../assets/Logo';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -83,7 +84,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         }`}
       >
         <div className="h-14 px-5 text-lg font-semibold tracking-tight border-b border-sidebar-border flex justify-between items-center">
-          <div>SWFX <span className="text-sidebar-ink font-normal">Pro</span></div>
+          <Logo className="text-sidebar-ink-strong [--logo-accent:var(--sidebar-accent)]" />
           <button className="md:hidden text-sidebar-ink hover:text-sidebar-ink-strong" onClick={onClose}>
             <X size={20} />
           </button>
