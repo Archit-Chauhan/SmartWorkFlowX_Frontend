@@ -42,6 +42,13 @@ describe('dueInfo', () => {
   it('never calls a finished task overdue', () => {
     expect(dueInfo(make({ status: 'Completed', dueDate: dueIn(-5) }), NOW).tone).not.toBe('overdue');
   });
+
+  it('says "Was due" for closed tasks, Rejected included', () => {
+    for (const status of ['Completed', 'Cancelled', 'Rejected'] as const) {
+      expect(dueInfo(make({ status, dueDate: dueIn(-5) }), NOW)).toMatchObject({ tone: 'normal' });
+      expect(dueInfo(make({ status, dueDate: dueIn(4) }), NOW).label).toMatch(/^Was due /);
+    }
+  });
 });
 
 describe('grouping', () => {

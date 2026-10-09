@@ -1,7 +1,15 @@
 import type { TaskItem } from '../../models';
 
-/** A task that still needs somebody to act on it. */
-export const isActive = (t: TaskItem): boolean => t.status !== 'Completed' && t.status !== 'Cancelled';
+/** A task that still needs somebody to act on it. Rejected is final, so it counts as closed. */
+export const isActive = (t: Pick<TaskItem, 'status'>): boolean => t.status === 'Pending' || t.status === 'In Progress';
+
+export const STATUS_CHIP: Record<string, string> = {
+  Completed: 'chip-completed',
+  'In Progress': 'chip-progress',
+  Cancelled: 'chip-rejected',
+  Rejected: 'chip-rejected',
+  Pending: 'chip-pending',
+};
 
 export type DueTone = 'overdue' | 'soon' | 'normal' | 'none';
 
@@ -17,13 +25,17 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
 
+const dueShort = (d: Date) => d.toLocaleDateString(undefined, { day: 'numeric', month: 'short' });
+
 export function dueInfo(task: TaskItem, now: Date = new Date()): DueInfo {
   if (!task.dueDate) return { label: 'No due date', dateText: '', tone: 'none' };
 
   const due = new Date(task.dueDate);
   const dateText = due.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
 
-  if (isActive(task) && due.getTime() < now.getTime()) {
+  if (!isActive(task)) return { label: `Was due ${dueShort(due)}`, dateText, tone: 'normal' };
+
+  if (due.getTime() < now.getTime()) {
     const days = Math.max(1, Math.ceil((now.getTime() - due.getTime()) / DAY_MS));
     return { label: days === 1 ? '1 day overdue' : `${days} days overdue`, dateText, tone: 'overdue' };
   }

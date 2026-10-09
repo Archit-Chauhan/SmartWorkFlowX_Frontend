@@ -142,7 +142,7 @@ export function computeDashboard(
 
   // Days past due are rounded up, so anything overdue by part of a day counts as 1 day.
   const overdue: OverdueTask[] = tasks.filter(t => isOverdueAt(t, end)).map(t => ({
-    taskId: t.taskId, title: t.title, assigneeName: t.assigneeName, workflowTitle: t.workflowTitle, priority: t.priority,
+    taskId: t.taskId, title: t.title, assigneeName: t.assigneeName ?? undefined, workflowTitle: t.workflowTitle, priority: t.priority,
     dueDate: t.dueDate!, daysOverdue: Math.ceil((end - ms(t.dueDate)) / DAY),
   })).sort((a, b) => b.daysOverdue - a.daysOverdue || a.taskId - b.taskId);
   const ageOf = (d: number) => (d <= 3 ? 0 : d <= 7 ? 1 : d <= 14 ? 2 : 3);

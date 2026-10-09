@@ -4,6 +4,7 @@ import { buildStore, CATEGORIES, ME_BY_ROLE, ROLES, type DemoStore } from './dat
 import type { UserRole } from '../models/User';
 import type { TaskItem } from '../models/Task';
 import type { DashboardFilters } from '../models/Dashboard';
+import { AllTasksQueryError, queryAllTasks } from './allTasks';
 import { computeDashboard, permissionsForRole, tasksToCsv, type DashboardScope } from './dashboard';
 
 let store: DemoStore | null = null;
@@ -129,8 +130,13 @@ function handle(method: string, path: string, q: URLSearchParams, body: Record<s
   }
   if (method === 'get' && path === '/Task/my-activity') return page(s.tasks.filter(t => s.history[t.taskId]?.some(h => h.actedByName === meName()) && t.assignedTo !== meId()).map(withSteps), q);
   if (method === 'get' && path === '/Task/all') {
+    if (q.has('page')) {
+      try { return queryAllTasks(s.tasks, s.workflows, q); }
+      catch (e) { if (e instanceof AllTasksQueryError) return fail(400, e.message); throw e; }
+    }
+    // Legacy shape (no `page`): a plain array, "Unassigned" when nobody holds the task.
     const st = q.get('status'), pr = q.get('priority'), cat = q.get('categoryId');
-    return s.tasks.filter(t => (!st || t.status === st) && (!pr || t.priority === pr) && (!cat || t.categoryId === +cat));
+    return s.tasks.filter(t => (!st || t.status === st) && (!pr || t.priority === pr) && (!cat || t.categoryId === +cat)).map(t => ({ ...withSteps(t), assigneeName: t.assigneeName ?? 'Unassigned' }));
   }
   if (method === 'get' && (r = m(/^\/Task\/(\d+)\/history$/))) return s.history[+r[1]] ?? [];
   if (method === 'post' && path === '/Task/assign') {
