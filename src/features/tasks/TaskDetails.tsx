@@ -93,13 +93,15 @@ interface Props {
   waitingForYou: boolean;
   titleId?: string;
   titleSize?: 'panel' | 'focus';
+  /** All Tasks only: who holds the task right now. Adds a "Currently with" row. */
+  currentlyWith?: React.ReactNode;
 }
 
 /**
  * The labelled view of one task, shared by the review panel and review mode:
  * TASK (title + progress), DESCRIPTION, SENT BACK, DETAILS, HISTORY.
  */
-const TaskDetails: React.FC<Props> = ({ task, history, historyLoading, waitingForYou, titleId, titleSize = 'panel' }) => {
+const TaskDetails: React.FC<Props> = ({ task, history, historyLoading, waitingForYou, titleId, titleSize = 'panel', currentlyWith }) => {
   const segments = stepSegments(task);
   const stepText = stepLabel(task);
 
@@ -140,6 +142,12 @@ const TaskDetails: React.FC<Props> = ({ task, history, historyLoading, waitingFo
       <section aria-label="Details">
         <SectionLabel>Details</SectionLabel>
         <dl className="mt-2 grid grid-cols-[96px_1fr] gap-x-3 gap-y-2.5 text-sm">
+          {currentlyWith !== undefined && (
+            <>
+              <dt className="text-ink-subtle">Currently with</dt>
+              <dd className="font-semibold text-ink">{currentlyWith}</dd>
+            </>
+          )}
           <dt className="text-ink-subtle">Due</dt>
           <dd><DueLabel task={task} /></dd>
           <dt className="text-ink-subtle">Priority</dt>

@@ -13,8 +13,11 @@ export interface TaskItem {
   description?: string;
   workflowId: number;
   workflowTitle?: string;
-  assignedTo?: number;
-  assigneeName?: string;
+  /** Null/absent when nobody holds the task (finished, or waiting for a role pool). */
+  assignedTo?: number | null;
+  assigneeName?: string | null;
+  /** All Tasks only: the role whose pool the task is waiting in, when nobody holds it. */
+  assignedRoleName?: string | null;
   status: TaskStatus;
   priority: TaskPriority;
   currentStepOrder: number;
@@ -50,4 +53,16 @@ export interface TaskStepHistory {
   action: 'Approved' | 'Rejected' | 'Completed';
   comment?: string;
   actedAt: string;
+}
+
+/** The groups behind the tabs of /Task/all. `closed` = Rejected or Cancelled. */
+export type TaskGroupFilter = 'all' | 'open' | 'completed' | 'closed';
+
+/** Paged answer of GET /Task/all (see docs/ALL_TASKS_SPEC.md). `counts` ignores group/status. */
+export interface AllTasksResponse {
+  data: TaskItem[];
+  total: number;
+  page: number;
+  pageSize: number;
+  counts: Record<TaskGroupFilter, number>;
 }

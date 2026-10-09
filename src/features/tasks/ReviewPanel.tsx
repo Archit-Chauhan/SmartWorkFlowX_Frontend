@@ -1,5 +1,5 @@
 import React, { useId, useRef } from 'react';
-import { CheckCircle, X, XCircle } from 'lucide-react';
+import { CheckCircle, Lock, X, XCircle } from 'lucide-react';
 import type { TaskItem, TaskStepHistory } from '../../models';
 import { useDialogA11y } from '../../hooks/useDialogA11y';
 import TaskDetails from './TaskDetails';
@@ -15,10 +15,14 @@ interface Props {
   onApprove: (task: TaskItem) => void;
   onReject: (task: TaskItem) => void;
   onClose: () => void;
+  /** All Tasks only: who holds the task ("Currently with" row). */
+  currentlyWith?: React.ReactNode;
+  /** All Tasks only: footer explaining that decisions are made elsewhere. */
+  readOnlyNote?: string;
 }
 
 /** Slide-in panel with the full labelled task and the decision buttons pinned at the bottom. */
-const ReviewPanel: React.FC<Props> = ({ task, history, historyLoading, canAct, disabled, onApprove, onReject, onClose }) => {
+const ReviewPanel: React.FC<Props> = ({ task, history, historyLoading, canAct, disabled, onApprove, onReject, onClose, currentlyWith, readOnlyNote }) => {
   const ref = useRef<HTMLElement>(null);
   const titleId = useId();
   // Escape belongs to the confirmation dialog while one is open on top of the panel.
@@ -42,7 +46,7 @@ const ReviewPanel: React.FC<Props> = ({ task, history, historyLoading, canAct, d
         </div>
 
         <div className="flex-1 overflow-y-auto px-5 py-5">
-          <TaskDetails task={task} history={history} historyLoading={historyLoading} waitingForYou={canAct} titleId={titleId} />
+          <TaskDetails task={task} history={history} historyLoading={historyLoading} waitingForYou={canAct} titleId={titleId} currentlyWith={currentlyWith} />
         </div>
 
         {canAct && (
@@ -54,6 +58,13 @@ const ReviewPanel: React.FC<Props> = ({ task, history, historyLoading, canAct, d
               <CheckCircle size={16} aria-hidden="true" /> {actionVerb(task)}
             </button>
           </div>
+        )}
+
+        {!canAct && readOnlyNote && (
+          <p className="flex items-center gap-2 border-t border-hairline bg-canvas px-4 py-3 text-xs text-ink-subtle">
+            <Lock size={14} className="shrink-0" aria-hidden="true" />
+            <span><strong className="font-semibold text-ink-muted">Read-only here.</strong> {readOnlyNote}</span>
+          </p>
         )}
       </aside>
     </>

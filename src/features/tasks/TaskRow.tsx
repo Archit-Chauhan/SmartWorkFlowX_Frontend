@@ -2,15 +2,7 @@ import React from 'react';
 import { RotateCcw } from 'lucide-react';
 import type { TaskItem } from '../../models';
 import { DueLabel, PrioritySignal } from './TaskDetails';
-import { stepLabel } from './taskUtils';
-
-const STATUS_STYLES: Record<string, string> = {
-  Completed: 'chip-completed',
-  'In Progress': 'chip-progress',
-  Cancelled: 'chip-rejected',
-  Rejected: 'chip-rejected',
-  Pending: 'chip-pending',
-};
+import { STATUS_CHIP, stepLabel } from './taskUtils';
 
 interface Props {
   task: TaskItem;
@@ -69,7 +61,7 @@ const TaskRow: React.FC<Props> = ({ task, selected, trailing, onOpen }) => (
       {trailing === 'due' ? (
         <DueLabel task={task} showDate={false} />
       ) : (
-        <span className={`chip ${STATUS_STYLES[task.status] || STATUS_STYLES.Pending}`}>{task.status}</span>
+        <span className={`chip ${STATUS_CHIP[task.status] || STATUS_CHIP.Pending}`}>{task.status}</span>
       )}
     </span>
   </button>
