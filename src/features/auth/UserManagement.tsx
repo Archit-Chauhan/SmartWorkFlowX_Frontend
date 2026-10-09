@@ -129,7 +129,7 @@ const UserManagement: React.FC = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h2 className="page-title">User Management</h2>
+          <h1 className="sr-only">Manage Users</h1>
           <p className="caption">
             {activeCount} active · <span className="text-error">{deactivatedCount} deactivated</span>
           </p>

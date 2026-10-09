@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axiosInstance from '../../api/axiosInstance';
 import type { TaskItem, TaskCategory } from '../../models';
-import { Flag, AlertTriangle, RotateCcw, ChevronDown, ChevronUp, CheckCircle, XCircle, ListFilter } from 'lucide-react';
+import { Flag, AlertTriangle, RotateCcw, ChevronDown, ChevronUp, CheckCircle, XCircle } from 'lucide-react';
 import EmptyState from '../../components/EmptyState';
 import type { TaskStepHistory } from '../../models';
 
@@ -88,10 +88,8 @@ const AllTasks: React.FC = () => {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h2 className="page-title flex items-center gap-2">
-          <ListFilter className="text-accent" size={24} /> All Tasks
-        </h2>
-        <p className="caption mt-1">
+        <h1 className="sr-only">All Tasks</h1>
+        <p className="caption">
           {loading ? 'Loading...' : `${tasks.length} task${tasks.length !== 1 ? 's' : ''} found`}
         </p>
       </div>

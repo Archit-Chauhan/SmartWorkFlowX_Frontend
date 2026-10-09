@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axiosInstance from '../../api/axiosInstance';
 import type { Workflow, TaskCreateRequest, TaskPriority, PaginatedResponse, TaskCategory } from '../../models';
-import { Send, ClipboardList, Sparkles } from 'lucide-react';
+import { Send, Sparkles } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -118,10 +118,8 @@ const TaskAssign: React.FC = () => {
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div>
-        <h2 className="page-title flex items-center gap-2">
-          <ClipboardList className="text-accent" /> Assign New Task
-        </h2>
-        <p className="caption mt-1">Start a workflow for an employee by assigning a task.</p>
+        <h1 className="sr-only">Assign Task</h1>
+        <p className="caption">Start a workflow for an employee by assigning a task.</p>
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="card card-pad space-y-5">
