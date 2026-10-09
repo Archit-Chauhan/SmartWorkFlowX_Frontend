@@ -18,6 +18,7 @@ export const useNotificationHub = () => {
   }, []);
 
   const connect = useCallback(() => {
+    if (__DEMO__) return;
     const token = localStorage.getItem('token');
     if (!token) return;
 

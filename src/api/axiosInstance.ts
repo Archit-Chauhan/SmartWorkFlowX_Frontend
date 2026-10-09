@@ -46,4 +46,10 @@ axiosInstance.interceptors.response.use(
   }
 );
 
+// Preview builds answer every call from an in-memory mock; dropped from production builds.
+if (__DEMO__) {
+  axiosInstance.defaults.adapter = config =>
+    import('../demo/mockAdapter').then(m => m.demoAdapter(config));
+}
+
 export default axiosInstance;

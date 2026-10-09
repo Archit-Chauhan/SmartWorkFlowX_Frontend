@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AppRoutes from './routes/AppRoutes';
 import { useTheme } from './hooks/useTheme';
+
+const DemoBar = __DEMO__ ? React.lazy(() => import('./demo/DemoBar')) : null;
 
 const App: React.FC = () => {
   const { theme } = useTheme();
@@ -22,6 +24,11 @@ const App: React.FC = () => {
         pauseOnHover 
         theme={theme}
       />
+      {DemoBar && (
+        <Suspense fallback={null}>
+          <DemoBar />
+        </Suspense>
+      )}
     </BrowserRouter>
   );
 };
