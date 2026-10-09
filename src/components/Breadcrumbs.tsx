@@ -15,6 +15,7 @@ const trail: Record<string, Crumb[]> = {
   '/all-tasks': [{ label: 'Tasks' }, { label: 'All Tasks' }],
   '/assign': [{ label: 'Tasks' }, { label: 'Assign Task' }],
   '/workflows': [{ label: 'Workflows' }],
+  '/workflows/new': [{ label: 'Workflows', to: '/workflows' }, { label: 'New workflow' }],
   '/users': [{ label: 'Administration' }, { label: 'Manage Users' }],
   '/audit': [{ label: 'Administration' }, { label: 'Audit Logs' }],
 };
@@ -24,6 +25,7 @@ const titleCase = (s: string) => s.replace(/[-_]/g, ' ').replace(/\b\w/g, c => c
 function crumbsFor(pathname: string): Crumb[] {
   const clean = pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname;
   if (trail[clean]) return trail[clean];
+  if (/^\/workflows\/\d+\/edit$/.test(clean)) return [{ label: 'Workflows', to: '/workflows' }, { label: 'Edit workflow' }];
   return clean.split('/').filter(Boolean).map(seg => ({ label: titleCase(seg) }));
 }
 
@@ -57,7 +59,11 @@ const Breadcrumbs: React.FC = () => {
                 </span>
               ) : (
                 <>
-                  <span className="truncate text-ink-muted">{item.label}</span>
+                  {item.to ? (
+                    <Link to={item.to} className="truncate text-ink-muted hover:text-ink transition-colors">{item.label}</Link>
+                  ) : (
+                    <span className="truncate text-ink-muted">{item.label}</span>
+                  )}
                   <ChevronRight size={14} className="shrink-0 text-ink-subtle" aria-hidden="true" />
                 </>
               )}

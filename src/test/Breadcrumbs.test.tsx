@@ -30,6 +30,18 @@ describe('Breadcrumbs', () => {
     expect(screen.getByText('Audit Logs')).toHaveAttribute('aria-current', 'page');
   });
 
+  it('links back to the workflow list from the builder pages', () => {
+    renderAt('/workflows/new');
+    expect(screen.getByRole('link', { name: 'Workflows' })).toHaveAttribute('href', '/workflows');
+    expect(screen.getByText('New workflow')).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('names the edit page without showing the workflow id', () => {
+    renderAt('/workflows/12/edit');
+    expect(screen.getByRole('link', { name: 'Workflows' })).toHaveAttribute('href', '/workflows');
+    expect(screen.getByText('Edit workflow')).toHaveAttribute('aria-current', 'page');
+  });
+
   it('falls back to the URL for unknown pages', () => {
     renderAt('/some-new-page');
     expect(screen.getByText('Some New Page')).toHaveAttribute('aria-current', 'page');

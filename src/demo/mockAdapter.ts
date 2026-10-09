@@ -5,6 +5,7 @@ import type { UserRole } from '../models/User';
 import type { TaskItem } from '../models/Task';
 import type { DashboardFilters } from '../models/Dashboard';
 import { AllTasksQueryError, queryAllTasks } from './allTasks';
+import { activeTaskCount, listItem, resolveCreateStatus, validateUpdateStatus, validateWorkflowBody, WorkflowRuleError } from './workflows';
 import { computeDashboard, permissionsForRole, tasksToCsv, type DashboardScope } from './dashboard';
 
 let store: DemoStore | null = null;
@@ -106,15 +107,50 @@ function handle(method: string, path: string, q: URLSearchParams, body: Record<s
   if (method === 'delete' && (r = m(/^\/Admin\/users\/(\d+)$/))) { const u = s.users.find(x => x.userId === +r![1]); if (u) u.isDeleted = true; return {}; }
   if (method === 'put' && (r = m(/^\/Admin\/users\/(\d+)\/restore$/))) { const u = s.users.find(x => x.userId === +r![1]); if (u) u.isDeleted = false; return {}; }
 
-  // ── Workflows ──
-  if (method === 'get' && path === '/Workflow') return page(s.workflows.map(w => ({ workflowId: w.workflowId, title: w.title, status: w.status, stepCount: w.steps.length })), q);
+  // -- Workflows (rules in ./workflows.ts, contract in docs/WORKFLOWS_SPEC.md) --
+  if (method === 'get' && path === '/Workflow') return page(s.workflows.map(w => listItem(w, s.tasks)), q);
   if (method === 'get' && path === '/Workflow/roles') return ROLES;
-  if (method === 'get' && (r = m(/^\/Workflow\/(\d+)$/))) { const w = s.workflows.find(x => x.workflowId === +r![1]); return w ?? fail(404, 'Workflow not found.'); }
-  const toSteps = (steps: Record<string, any>[]) => steps.map((st, i) => ({ stepId: ++s.nextId, stepOrder: st.stepOrder ?? i + 1, stepName: st.stepName, description: st.description, approverRoleName: ROLES.find(x => x.roleId === st.approverRoleId)?.roleName ?? 'Manager', onRejectAction: st.onRejectAction ?? 'Cancel', escalationHours: st.escalationHours })); // eslint-disable-line @typescript-eslint/no-explicit-any
-  if (method === 'post' && path === '/Workflow') { s.workflows.unshift({ workflowId: ++s.nextId, title: body.title, description: body.description, status: 'Draft', createdByName: meName(), createdAt: new Date().toISOString(), steps: toSteps(body.steps || []) }); return { message: 'Created' }; }
-  if (method === 'put' && (r = m(/^\/Workflow\/(\d+)$/))) { const w = s.workflows.find(x => x.workflowId === +r![1]); if (w) { w.title = body.title; w.description = body.description; w.status = body.status; w.steps = toSteps(body.steps || []); } return {}; }
-  if (method === 'post' && (r = m(/^\/Workflow\/(\d+)\/clone$/))) { const w = s.workflows.find(x => x.workflowId === +r![1]); if (w) s.workflows.unshift({ ...w, workflowId: ++s.nextId, title: `${w.title} (copy)`, status: 'Draft' }); return {}; }
-  if (method === 'delete' && (r = m(/^\/Workflow\/(\d+)$/))) { s.workflows = s.workflows.filter(x => x.workflowId !== +r![1]); return {}; }
+  const findWorkflow = (id: number, missing = 'Workflow not found.') => s.workflows.find(x => x.workflowId === id) ?? (() => { throw new WorkflowRuleError(404, missing); })();
+  const toSteps = (steps: Record<string, any>[]) => steps.map((st, i) => ({ stepId: ++s.nextId, stepOrder: i + 1, stepName: String(st.stepName).trim(), description: String(st.description ?? '').trim() || undefined, approverRoleName: ROLES.find(x => x.roleId === st.approverRoleId)?.roleName ?? 'Manager', approverRoleId: Number(st.approverRoleId), onRejectAction: st.onRejectAction, escalationHours: st.escalationHours ?? undefined })); // eslint-disable-line @typescript-eslint/no-explicit-any
+  const roleIds = ROLES.map(x => x.roleId);
+  try {
+    if (method === 'get' && (r = m(/^\/Workflow\/(\d+)$/))) return findWorkflow(+r[1]);
+    if (method === 'post' && path === '/Workflow') {
+      const v = validateWorkflowBody(body, s.workflows, roleIds, null);
+      const status = resolveCreateStatus(body.status);
+      s.workflows.unshift({ workflowId: ++s.nextId, title: v.title, description: v.description, status, createdByName: meName(), createdAt: new Date().toISOString(), steps: toSteps(v.steps as Record<string, any>[]) }); // eslint-disable-line @typescript-eslint/no-explicit-any
+      return { message: 'Workflow created successfully.' };
+    }
+    if (method === 'put' && (r = m(/^\/Workflow\/(\d+)$/))) {
+      const w = findWorkflow(+r[1]);
+      if (activeTaskCount(s.tasks, w.workflowId) > 0) throw new WorkflowRuleError(400, 'Cannot modify a workflow with active in-progress tasks.');
+      const v = validateWorkflowBody(body, s.workflows, roleIds, w.workflowId);
+      const status = validateUpdateStatus(body.status);
+      w.title = v.title; w.description = v.description; w.status = status; w.steps = toSteps(v.steps as Record<string, any>[]); // eslint-disable-line @typescript-eslint/no-explicit-any
+      return { message: 'Workflow updated successfully.' };
+    }
+    if (method === 'post' && (r = m(/^\/Workflow\/(\d+)\/activate$/))) {
+      const w = findWorkflow(+r[1]);
+      if (w.steps.length === 0) throw new WorkflowRuleError(400, 'A workflow needs at least one step before it can be activated.');
+      if (w.status === 'Active') return { message: 'Workflow is already active.' };
+      w.status = 'Active';
+      return { message: 'Workflow activated successfully.' };
+    }
+    if (method === 'post' && (r = m(/^\/Workflow\/(\d+)\/clone$/))) {
+      const w = findWorkflow(+r[1], 'Source workflow not found.');
+      s.workflows.unshift({ ...w, workflowId: ++s.nextId, title: `${w.title} (Copy)`, status: 'Draft', createdByName: meName(), createdAt: new Date().toISOString(), steps: w.steps.map(st => ({ ...st, stepId: ++s.nextId })) });
+      return { message: 'Workflow cloned successfully.' };
+    }
+    if (method === 'delete' && (r = m(/^\/Workflow\/(\d+)$/))) {
+      const w = findWorkflow(+r[1]);
+      if (activeTaskCount(s.tasks, w.workflowId) > 0) throw new WorkflowRuleError(400, 'Cannot deactivate a workflow with active in-progress tasks.');
+      w.status = 'Inactive';
+      return { message: 'Workflow deactivated successfully.' };
+    }
+  } catch (e) {
+    if (e instanceof WorkflowRuleError) return fail(e.status, e.message);
+    throw e;
+  }
 
   // ── Tasks ──
   if (method === 'get' && path === '/Task/categories') return CATEGORIES;
