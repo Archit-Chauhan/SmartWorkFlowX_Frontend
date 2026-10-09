@@ -49,7 +49,7 @@ const Dashboard: React.FC = () => {
   const selfScope = data?.scope === 'self';
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-4">
       <h1 className="sr-only">Dashboard</h1>
 
       <div className="flex flex-col xl:flex-row xl:items-start xl:justify-between gap-4">
@@ -77,7 +77,7 @@ const Dashboard: React.FC = () => {
         error ? null : <DashboardSkeleton />
       ) : (
         <div
-          className={`space-y-6 transition-opacity duration-150 ${loading ? 'opacity-60' : ''}`}
+          className={`space-y-4 transition-opacity duration-150 ${loading ? 'opacity-60' : ''}`}
           aria-busy={loading}
         >
           <KpiCards kpis={data.kpis} range={data.range} />
@@ -94,20 +94,20 @@ const Dashboard: React.FC = () => {
             <>
               <TrendChart data={data} />
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <StatusDonut data={data} />
                 <PriorityChart data={data} />
                 <CategoryChart data={data} />
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <div className={selfScope ? 'lg:col-span-2 min-w-0' : 'min-w-0'}>
                   <WorkflowPerformance rows={data.byWorkflow} />
                 </div>
                 {!selfScope && <WorkloadChart data={data} />}
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
                 <AgingChart data={data} />
                 <TopOverdueList rows={data.topOverdue} />
               </div>

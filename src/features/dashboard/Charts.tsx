@@ -75,8 +75,8 @@ export const StatusDonut: React.FC<Props> = ({ data }) => {
       summary={`Donut chart of ${plural(total, 'task')} by status: ${rows.map(r => `${r.status} ${r.count}`).join(', ')}.`}
       table={{ caption: 'Tasks by status', columns: ['Status', 'Tasks'], rows: rows.map(r => [statusLabel(r.status), r.count]) }}
     >
-      <div className="flex flex-col items-center gap-4">
-        <div className="relative w-44 h-44">
+      <div className="flex flex-col items-center gap-3">
+        <div className="relative w-40 h-40">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
               <Pie data={rows} dataKey="count" nameKey="status" innerRadius="64%" outerRadius="100%" stroke="var(--canvas)" strokeWidth={2} isAnimationActive={false}>
@@ -90,7 +90,7 @@ export const StatusDonut: React.FC<Props> = ({ data }) => {
             <span className="caption">tasks</span>
           </div>
         </div>
-        <ul className="w-full space-y-1">
+        <ul className="w-full grid grid-cols-2 gap-x-6 gap-y-1">
           {rows.map(r => (
             <li key={r.status} className="flex items-center gap-2 text-sm">
               <span className="w-2.5 h-2.5 rounded-pill flex-shrink-0" style={{ background: statusColor(r.status) }} aria-hidden="true" />
@@ -128,15 +128,26 @@ export const PriorityChart: React.FC<Props> = ({ data }) => {
   );
 };
 
+const MAX_CATEGORY_BARS = 8;
+
+/** Top categories plus one "Other" bar, so an unbounded list never makes the card grow without limit. */
+function capCategories(all: DashboardResponse['byCategory']): DashboardResponse['byCategory'] {
+  if (all.length <= MAX_CATEGORY_BARS) return all;
+  const head = all.slice(0, MAX_CATEGORY_BARS - 1);
+  const rest = all.slice(MAX_CATEGORY_BARS - 1);
+  return [...head, { categoryId: null, name: 'Other', colorHex: 'var(--ink-subtle)', count: sum(rest.map(r => r.count)) }];
+}
+
 export const CategoryChart: React.FC<Props> = ({ data }) => {
-  const rows = data.byCategory;
-  const height = Math.max(160, rows.length * 36 + 24);
+  const allRows = data.byCategory;
+  const rows = capCategories(allRows);
+  const height = Math.max(224, rows.length * 36 + 24);
   return (
     <ChartCard
       title="By category"
       subtitle="Tasks created in this period"
       summary={`Bar chart of tasks by category: ${rows.map(r => `${r.name} ${r.count}`).join(', ') || 'none'}.`}
-      table={{ caption: 'Tasks by category', columns: ['Category', 'Tasks'], rows: rows.map(r => [r.name, r.count]) }}
+      table={{ caption: 'Tasks by category', columns: ['Category', 'Tasks'], rows: allRows.map(r => [r.name, r.count]) }}
     >
       <div style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
@@ -162,6 +173,7 @@ export const WorkloadChart: React.FC<Props> = ({ data }) => {
     <ChartCard
       title="Workload per person"
       subtitle="Tasks created in this period, by current status"
+      scroll
       summary={`Stacked bar chart of workload for ${plural(rows.length, 'person')}: ${rows.map(r => `${r.name} ${r.pending} pending, ${r.inProgress} in progress, ${r.completed} completed`).join('; ')}.`}
       table={{
         caption: 'Workload per person',

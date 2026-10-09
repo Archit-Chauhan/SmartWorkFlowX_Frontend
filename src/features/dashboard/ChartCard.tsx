@@ -32,19 +32,23 @@ interface ChartCardProps {
   /** When given, the card offers a Chart | Table toggle that swaps in this table. */
   table?: DataTableProps;
   className?: string;
+  /** Cap the body height and scroll inside the card, so a long list never stretches the page. */
+  scroll?: boolean;
+  /** Shown under the body, outside the scrolling area. */
+  footer?: React.ReactNode;
   children: React.ReactNode;
 }
 
 const toggleBase =
   'inline-flex items-center gap-1.5 h-9 px-3 text-xs font-medium transition-colors duration-150 ';
 
-const ChartCard: React.FC<ChartCardProps> = ({ title, subtitle, summary, table, className = '', children }) => {
+const ChartCard: React.FC<ChartCardProps> = ({ title, subtitle, summary, table, className = '', scroll = false, footer, children }) => {
   const [view, setView] = useState<'chart' | 'table'>('chart');
   const headingId = useId();
   const showTable = view === 'table' && table;
 
   return (
-    <section className={`card card-pad min-w-0 ${className}`} aria-labelledby={headingId}>
+    <section className={`card p-5 min-w-0 ${className}`} aria-labelledby={headingId}>
       <div className="flex items-start justify-between gap-3 mb-4">
         <div className="min-w-0">
           <h2 id={headingId} className="section-title">{title}</h2>
@@ -73,11 +77,12 @@ const ChartCard: React.FC<ChartCardProps> = ({ title, subtitle, summary, table, 
       </div>
       {showTable ? (
         <DataTable {...table} />
-      ) : summary ? (
-        <div role="img" aria-label={summary}>{children}</div>
       ) : (
-        children
+        <div className={scroll ? 'max-h-80 overflow-y-auto pr-1 -mr-1' : undefined}>
+          {summary ? <div role="img" aria-label={summary}>{children}</div> : children}
+        </div>
       )}
+      {footer && !showTable && <div className="mt-3 pt-3 border-t border-hairline">{footer}</div>}
     </section>
   );
 };

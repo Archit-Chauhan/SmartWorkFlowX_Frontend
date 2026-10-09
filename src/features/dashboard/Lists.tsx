@@ -9,14 +9,14 @@ export const WorkflowPerformance: React.FC<{ rows: DashboardResponse['byWorkflow
     {rows.length === 0 ? (
       <p className="empty-state">No workflows in this period.</p>
     ) : (
-      <div className="overflow-x-auto -mx-6">
+      <div className="overflow-auto max-h-80 -mx-5">
         <table className="table tabular-nums">
           <thead>
             <tr>
-              <th scope="col">Workflow</th>
-              <th scope="col" className="text-right">Total</th>
-              <th scope="col">Completed</th>
-              <th scope="col" className="text-right">Avg cycle</th>
+              <th scope="col" className="sticky top-0 z-[1]">Workflow</th>
+              <th scope="col" className="sticky top-0 z-[1] text-right">Total</th>
+              <th scope="col" className="sticky top-0 z-[1]">Completed</th>
+              <th scope="col" className="sticky top-0 z-[1] text-right">Avg cycle</th>
             </tr>
           </thead>
           <tbody>
@@ -46,7 +46,12 @@ export const WorkflowPerformance: React.FC<{ rows: DashboardResponse['byWorkflow
 );
 
 export const TopOverdueList: React.FC<{ rows: DashboardResponse['topOverdue'] }> = ({ rows }) => (
-  <ChartCard title="Most overdue" subtitle="Open tasks furthest past their due date">
+  <ChartCard
+    title="Most overdue"
+    subtitle="Open tasks furthest past their due date"
+    scroll
+    footer={rows.length > 0 ? <Link to="/all-tasks" className="text-sm font-medium text-accent hover:text-accent-hover">View all tasks</Link> : undefined}
+  >
     {rows.length === 0 ? (
       <p className="empty-state">Nothing is overdue.</p>
     ) : (
@@ -80,7 +85,12 @@ export interface ActivityEntry {
 }
 
 export const RecentActivity: React.FC<{ rows: ActivityEntry[] }> = ({ rows }) => (
-  <ChartCard title="Recent activity" subtitle="Latest audit log entries">
+  <ChartCard
+    title="Recent activity"
+    subtitle="Latest audit log entries"
+    scroll
+    footer={<Link to="/audit" className="text-sm font-medium text-accent hover:text-accent-hover">Open audit log</Link>}
+  >
     {rows.length === 0 ? (
       <p className="empty-state">No recent activity.</p>
     ) : (
