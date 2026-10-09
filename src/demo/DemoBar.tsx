@@ -24,7 +24,7 @@ const DemoBar: React.FC = () => {
     <div
       role="region"
       aria-label="Demo controls"
-      className="fixed bottom-3 right-3 z-[200] flex flex-wrap items-center gap-2 rounded-card border border-hairline-strong bg-canvas px-3 py-2 text-xs text-ink shadow-xl"
+      className="fixed bottom-3 right-3 z-[35] flex flex-wrap items-center gap-2 rounded-card border border-hairline-strong bg-canvas px-3 py-2 text-xs text-ink shadow-xl"
     >
       <span className="rounded-control bg-accent px-1.5 py-0.5 font-semibold text-on-accent">DEMO</span>
       <label className="flex items-center gap-1">
