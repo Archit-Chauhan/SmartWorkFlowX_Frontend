@@ -5,6 +5,7 @@ import type { UserRole } from '../models/User';
 import type { TaskItem } from '../models/Task';
 import type { DashboardFilters } from '../models/Dashboard';
 import { AllTasksQueryError, queryAllTasks } from './allTasks';
+import { UsersApiError, changeRole, createUser, deactivateUser, queryUsers, restoreUser, usersCsv } from './users';
 import { computeDashboard, permissionsForRole, tasksToCsv, type DashboardScope } from './dashboard';
 
 let store: DemoStore | null = null;
@@ -96,15 +97,20 @@ function handle(method: string, path: string, q: URLSearchParams, body: Record<s
   if (method === 'get' && path === '/Report/audit-logs/export') return new Blob([csv(s.audit as unknown as Record<string, unknown>[])], { type: 'text/csv' });
 
   // ── Users ──
-  if (method === 'get' && path === '/Admin/users') return page(s.users.filter(contains(q, 'name', 'email')), q);
-  if (method === 'get' && path === '/Admin/users/export') return new Blob([csv(s.users.map(u => ({ name: u.name, email: u.email, role: u.role?.roleName, deleted: u.isDeleted })))], { type: 'text/csv' });
-  if (method === 'post' && path === '/Admin/users') {
-    const roleId = Number(body.roleId) || 3;
-    s.users.unshift({ userId: ++s.nextId, name: body.name, email: body.email, roleId, role: ROLES.find(x => x.roleId === roleId), isDeleted: false, createdAt: new Date().toISOString() });
-    return { message: 'User registered.' };
+  if (method === 'get' && path === '/Admin/roles') return ROLES;
+  if (path.startsWith('/Admin/users')) {
+    try {
+      if (method === 'get' && path === '/Admin/users') return queryUsers(s, q);
+      if (method === 'get' && path === '/Admin/users/export') return new Blob([usersCsv(s, q)], { type: 'text/csv' });
+      if (method === 'post' && path === '/Admin/users') return createUser(s, body);
+      if (method === 'put' && (r = m(/^\/Admin\/users\/(\d+)\/role$/))) return changeRole(s, +r[1], body, meId());
+      if (method === 'put' && (r = m(/^\/Admin\/users\/(\d+)\/restore$/))) return restoreUser(s, +r[1]);
+      if (method === 'delete' && (r = m(/^\/Admin\/users\/(\d+)$/))) return deactivateUser(s, +r[1], meId());
+    } catch (e) {
+      if (e instanceof UsersApiError) return fail(e.status, e.message);
+      throw e;
+    }
   }
-  if (method === 'delete' && (r = m(/^\/Admin\/users\/(\d+)$/))) { const u = s.users.find(x => x.userId === +r![1]); if (u) u.isDeleted = true; return {}; }
-  if (method === 'put' && (r = m(/^\/Admin\/users\/(\d+)\/restore$/))) { const u = s.users.find(x => x.userId === +r![1]); if (u) u.isDeleted = false; return {}; }
 
   // ── Workflows ──
   if (method === 'get' && path === '/Workflow') return page(s.workflows.map(w => ({ workflowId: w.workflowId, title: w.title, status: w.status, stepCount: w.steps.length })), q);

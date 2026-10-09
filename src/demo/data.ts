@@ -28,6 +28,27 @@ const userSeed: [number, string, string, number, boolean][] = [
   [6, 'Frank Wu', 'auditor@swfx.demo', 4, false],
   [7, 'Grace Kim', 'grace.kim@swfx.demo', 3, true],
   [8, 'Hiro Tanaka', 'hiro.tanaka@swfx.demo', 3, false],
+  // One active Admin (Alice, the demo Admin) and one deactivated Admin, so the last-Admin rules can be seen.
+  [9, 'Ivan Petrov', 'ivan.petrov@swfx.demo', 1, true],
+  [10, 'Jana Novak', 'jana.novak@swfx.demo', 2, false],
+  [11, 'Kofi Mensah', 'kofi.mensah@swfx.demo', 3, false],
+  [12, 'Lena Fischer', 'lena.fischer@swfx.demo', 3, false],
+  [13, 'Mateo Ruiz', 'mateo.ruiz@swfx.demo', 2, false],
+  [14, 'Nadia Haddad', 'nadia.haddad@swfx.demo', 4, false],
+  [15, 'Omar Khalil', 'omar.khalil@swfx.demo', 3, true],
+  [16, 'Priya Nair', 'priya.nair@swfx.demo', 3, false],
+  [17, 'Quentin Dubois', 'quentin.dubois@swfx.demo', 3, false],
+  [18, 'Rosa Alvarez', 'rosa.alvarez@swfx.demo', 2, false],
+  [19, 'Sven Larsen', 'sven.larsen@swfx.demo', 3, false],
+  [20, 'Tara Okafor', 'tara.okafor@swfx.demo', 3, true],
+  [21, 'Umar Siddiqui', 'umar.siddiqui@swfx.demo', 4, false],
+  [22, 'Vera Kowalski', 'vera.kowalski@swfx.demo', 3, false],
+  [23, 'Wei Zhang', 'wei.zhang@swfx.demo', 3, false],
+  [24, 'Ximena Torres', 'ximena.torres@swfx.demo', 2, false],
+  [25, 'Yusuf Demir', 'yusuf.demir@swfx.demo', 3, false],
+  [26, 'Zoe Campbell', 'zoe.campbell@swfx.demo', 3, true],
+  [27, 'Aiko Mori', 'aiko.mori@swfx.demo', 3, false],
+  [28, 'Bruno Costa', 'bruno.costa@swfx.demo', 3, false],
 ];
 
 /** The signed-in demo user for each role. */
