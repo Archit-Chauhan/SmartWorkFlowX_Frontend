@@ -6,6 +6,8 @@ import { actionVerb, nextStepText, REJECT_REASONS, stepLabel } from './taskUtils
 
 interface ShellProps {
   tone: 'accent' | 'danger';
+  /** Overrides the default icon for the tone. */
+  icon?: React.ReactNode;
   title: string;
   description: string;
   busy: boolean;
@@ -15,7 +17,7 @@ interface ShellProps {
 }
 
 /** Centered confirmation dialog: scrim, focus trap, Escape to cancel. */
-const DialogShell: React.FC<ShellProps> = ({ tone, title, description, busy, onClose, children, footer }) => {
+export const DialogShell: React.FC<ShellProps> = ({ tone, icon, title, description, busy, onClose, children, footer }) => {
   const ref = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const descId = useId();
@@ -36,7 +38,7 @@ const DialogShell: React.FC<ShellProps> = ({ tone, title, description, busy, onC
       >
         <div className="flex items-start gap-3 px-5 pt-5">
           <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${tone === 'danger' ? 'chip-rejected' : 'bg-accent-soft text-accent'}`}>
-            {tone === 'danger' ? <AlertTriangle size={20} /> : <CheckCircle size={20} />}
+            {icon ?? (tone === 'danger' ? <AlertTriangle size={20} /> : <CheckCircle size={20} />)}
           </span>
           <div>
             <h2 id={titleId} className="section-title">{title}</h2>
