@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import ThemeToggle from '../../components/ThemeToggle';
+import { LogoMark } from '../../assets/Logo';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../api/axiosInstance';
 import { Mail, AlertCircle, CheckCircle2, ArrowLeft, Loader2 } from 'lucide-react';
@@ -75,6 +76,7 @@ const ForgotPassword: React.FC = () => {
           >
             <ArrowLeft size={16} className="mr-1" /> Back to login
           </button>
+          <LogoMark className="h-10 w-10 mx-auto mb-3 text-ink" />
           <h2 className="text-center text-2xl font-semibold text-ink">
             Forgot Password
           </h2>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import ThemeToggle from '../../components/ThemeToggle';
+import { LogoMark } from '../../assets/Logo';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Lock, Mail, AlertCircle, Loader2, Eye, EyeOff } from 'lucide-react';
@@ -44,6 +45,7 @@ const Login: React.FC = () => {
       <div className="absolute top-4 right-4"><ThemeToggle /></div>
       <div className="w-full max-w-[400px] space-y-6 card card-pad">
         <div>
+          <LogoMark className="h-12 w-12 mx-auto mb-3 text-ink" />
           <h2 className="text-center text-2xl font-semibold text-ink">
             SmartWorkFlow<span className="text-accent">X</span>
           </h2>
